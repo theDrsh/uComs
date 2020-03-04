@@ -9,3 +9,16 @@ py_binary(
     "example_protocol.yml",
   ],
 )
+
+py_test(
+  name = "microplot_test",
+  srcs = [
+    "microplot.py",
+    "example_main.py",
+    "microplot_test.py",
+  ],
+  main = "microplot_test.py",
+  data = [
+    "example_protocol.yml",
+  ],
+)

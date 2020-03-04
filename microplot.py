@@ -40,4 +40,3 @@ class MicroPlot():
         else:
            output_string += self._yaml_data['Protocol'][element]
       self._compiled_commands[command] = output_string
-    print(self._compiled_commands)
