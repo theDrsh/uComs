@@ -1,0 +1,12 @@
+Protocol:
+  # Headers are a common piece of text that all commands share(at beginning of message)
+  Header:
+    '$'
+  # Headers are a common piece of text that all commands share(at end of message)
+  Footer:
+    '>'
+  Delimiter:
+    ' '
+  Commands:
+    GetAnalogZero:
+      Pattern: "%Header%A0%Delimiter%Value%Footer"
