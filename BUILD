@@ -20,5 +20,6 @@ py_test(
   main = "microplot_test.py",
   data = [
     "example_protocol.yml",
+    "test.yml",
   ],
 )

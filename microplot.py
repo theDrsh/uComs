@@ -26,6 +26,7 @@ class MicroPlot():
         self._pattern_list = list()
         for element_key, element_value in self._yaml_data['Protocol']['Pattern'].items():
             self._pattern_list.insert(int(element_key), element_value)
+        self._logger.info("Protocol file parsed successfully")
 
     def parse(self, input_string):
         '''
@@ -41,6 +42,7 @@ class MicroPlot():
             if element == "Value":
                 # TODO(Daniel): handle values other than ints
                 value = int(re.search(r'\d+', working_string).group())
+                working_string = working_string.split(str(value))[-1]
             elif element == "Command":
                 # TODO(Daniel): handle command formats other then command then delimiter
                 split_string = working_string.split(self._yaml_data["Protocol"]["Delimiter"])
