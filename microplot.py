@@ -25,7 +25,7 @@ class MicroPlot():
             sys.exit(1)
         self._pattern_list = list()
         for element_key, element_value in self._yaml_data['Protocol']['Pattern'].items():
-            self._pattern_list.insert(int(elemen`t_key), element_value)
+            self._pattern_list.insert(int(element_key), element_value)
 
     def parse(self, input_string):
         '''
