@@ -17,8 +17,8 @@ class MicroPlot():
         # Check if file exists, if it does, load the yaml data
         if os.path.isfile(protocol_yaml):
             with open(protocol_yaml) as file_pointer:
-            self._yaml_data = yaml.load(file_pointer)
-            self._logger.info("Loaded %s as protocol description" % (protocol_yaml))
+                self._yaml_data = yaml.load(file_pointer)
+                self._logger.info("Loaded %s as protocol description" % (protocol_yaml))
         else:
             logger.fatal("Protocol file %s doesn't exist in the file system" % (protocol_yaml))
             sys.exit(1)
@@ -26,7 +26,7 @@ class MicroPlot():
         element_list = list()
         for element in self._yaml_data['Protocol']:
             if element != "Commands":
-            element_list.append(element)
+                element_list.append(element)
 
         self._compiled_commands = dict()
         for command, command_values in self._yaml_data['Protocol']['Commands'].items():
