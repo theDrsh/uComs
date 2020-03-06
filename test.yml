@@ -1,0 +1,2 @@
+test_commands:
+    GetAnalogZero: "$A0 91142>"

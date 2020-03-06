@@ -1,9 +1,10 @@
 import logging
 import os
+import re
 import sys
 import yaml
 
-logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
+logging.basicConfig(format='MICROPLOT %(asctime)s %(levelname)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
 logger = logging.Logger("MicroPlot")
 module_logger = logging.getLogger('MicroPlot')
 
@@ -22,22 +23,35 @@ class MicroPlot():
         else:
             logger.fatal("Protocol file %s doesn't exist in the file system" % (protocol_yaml))
             sys.exit(1)
-
-        element_list = list()
-        for element in self._yaml_data['Protocol']:
-            if element != "Commands":
-                element_list.append(element)
-
-        self._compiled_commands = dict()
-        for command, command_values in self._yaml_data['Protocol']['Commands'].items():
-            pattern = command_values['Pattern']
-            command_pattern = pattern.split("%")
-            # remove any empty elements
-            command_pattern.remove("")
-            output_string = ""
-            for element in command_pattern:
-                if element not in element_list:
-                    output_string += element
-                else:
-                    output_string += self._yaml_data['Protocol'][element]
-                self._compiled_commands[command] = output_string
+        self._pattern_list = list()
+        for element_key, element_value in self._yaml_data['Protocol']['Pattern'].items():
+            self._pattern_list.insert(int(element_key), element_value)
+    def parse(self, input_string):
+        '''
+            Iterate through the pattern list, make sure that each element is the first in the
+            string then pop off of string, if we are looking at the command in the list we expect
+            the delimiter to immediately follow, then if we are looking at the value, pull the
+            integer value out of it
+        '''
+        working_string = input_string
+        value = None
+        key = None
+        for element in self._pattern_list:
+            if element == "Value":
+                # TODO(Daniel): handle values other than ints
+                value = int(re.search(r'\d+', working_string).group())
+            elif element == "Command":
+                # TODO(Daniel): handle command formats other then command then delimiter
+                split_string = working_string.split(self._yaml_data["Protocol"]["Delimiter"])
+                key = split_string[0]
+                working_string =  split_string[1]
+            else:
+                split_string = working_string.split(self._yaml_data["Protocol"][element])
+                if len(split_string) > 1:
+                    if split_string[0] == '':
+                        working_string = split_string[1]
+            if key != None and value != None:
+                for command_key, command_value in self._yaml_data["Protocol"]["Commands"].items():
+                    if key == command_value:
+                        return {command_key : value}
+        return None

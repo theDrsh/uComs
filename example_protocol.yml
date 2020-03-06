@@ -7,6 +7,11 @@ Protocol:
     '>'
   Delimiter:
     ' '
+  Pattern:
+    1: Header
+    2: Command
+    3: Delimiter
+    4: Value
+    5: Footer
   Commands:
-    GetAnalogZero:
-      Pattern: "%Header%A0%Delimiter%Value%Footer"
+    GetAnalogZero: "A0"
