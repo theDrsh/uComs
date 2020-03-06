@@ -1,17 +1,15 @@
 import microplot
-import logging
 import unittest
 import yaml
 
 class TestMicroPlot(unittest.TestCase):
-
-
     def test_instantiation(self):
         mp = microplot.MicroPlot("example_protocol.yml")
         try:
             mp2 = microplot.MicroPlot("")
         except SystemExit as e:
             print("Caught %s as expected" % (e))
+
     def test_commands(self):
         mp = microplot.MicroPlot("example_protocol.yml")
         with open("test.yml") as file_pointer:
