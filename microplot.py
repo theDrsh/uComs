@@ -41,7 +41,7 @@ class MicroPlot():
         for element in self._pattern_list:
             if element == "Value":
                 # TODO(Daniel): handle values other than ints
-                value = int(re.search(r'\d+', working_string).group())
+                value = int(re.search(r'[-+]?\d*\.?\d+([eE][-+]?\d+)?', working_string).group())
                 working_string = working_string.split(str(value))[-1]
             elif element == "Command":
                 # TODO(Daniel): handle command formats other then command then delimiter
