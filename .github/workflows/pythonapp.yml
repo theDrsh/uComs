@@ -35,3 +35,6 @@ jobs:
       uses: ngalaiko/bazel-action/1.2.1@master
       with:
         args: test //...
+    - name: Print testlog
+      run: |
+        cat /github/home/.cache/bazel/_bazel_root/3ef6b2ad9cc100f006a5d4a7217ff063/execroot/__main__/bazel-out/k8-fastbuild/testlogs/microplot_test/test.log
