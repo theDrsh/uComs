@@ -31,10 +31,7 @@ jobs:
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test with bazel
-      uses: ngalaiko/bazel-action/1.2.1@master
-      with:
-        args: test //...
-    - name: Print testlog
+    - name: Test with pytest
       run: |
-        cat /github/home/.cache/bazel/_bazel_root/3ef6b2ad9cc100f006a5d4a7217ff063/execroot/__main__/bazel-out/k8-fastbuild/testlogs/microplot_test/test.log
+        pip install pytest
+        pytest
