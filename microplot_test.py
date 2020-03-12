@@ -13,7 +13,7 @@ class TestMicroPlot(unittest.TestCase):
     def test_commands(self):
         mp = microplot.MicroPlot("example_protocol.yml")
         with open("test.yml") as file_pointer:
-            yaml_data = yaml.load(file_pointer)
+            yaml_data = yaml.full_load(file_pointer)
         print(yaml_data['test_commands'])
         iteration = 0
         for command in yaml_data['test_commands']:
