@@ -18,6 +18,9 @@ py_test(
     "microplot_test.py",
   ],
   main = "microplot_test.py",
+  imports = [
+    "PyYaml",
+  ],
   data = [
     "example_protocol.yml",
     "test.yml",
