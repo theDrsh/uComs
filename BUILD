@@ -11,7 +11,7 @@ py_binary(
 )
 
 py_test(
-  name = "microplot_test",
+  name = "mako_files/microplot_test",
   srcs = [
     "microplot.py",
     "example_main.py",

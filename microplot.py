@@ -1,14 +1,41 @@
+#!/usr/bin/python3
+
+import argparse
 import logging
 import os
 import re
 import sys
 import yaml
+from mako.template import Template
 
+# Logger setup for logging(as executable or as import)
 logging.basicConfig(format='MICROPLOT %(asctime)s %(levelname)s %(message)s',
                     datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
 logger = logging.Logger("MicroPlot")
 module_logger = logging.getLogger('MicroPlot')
 
+# Argparse setup for calling this as an executable.
+parser = argparse.ArgumentParser(
+    prog="MicroPlot",
+    description="Microplot is a module as well as an executable, \
+                 running it as an executable allows you to use the code generation functions"
+)
+parser.add_argument("-g", "--generate", help="Run code generation tools", action="store_true", default=False)
+parser.add_argument("--force_c",
+                    help="If you prefer to use pure C for your embedded code, \
+                          use this option to force generation of C code",
+                    default=False,
+                    action="store_true")
+parser.add_argument("--first_generation",
+                    help="This flag generates the one-time files which will be maintained by user \
+                          after first generation these files are: \'microplot_init.h/c/cc\' and \
+                          \'microplot_actions.h/cc/c\'",
+                    default=False,
+                    action="store_true")
+parser.add_argument("--proto_yaml",
+                    help="Protocol description yaml file.",
+                    default="example_protocol.yml")
+ARGS = parser.parse_args()
 
 class MicroPlot():
     def __init__(self, protocol_yaml):
@@ -58,3 +85,31 @@ class MicroPlot():
                     if key == command_value:
                         return {command_key : value}
         return None
+    def generate(self, force_c, generate_actions):
+        templates = [Template(filename="mako_files/microplot.h.mako")]
+        if not force_c:
+            templates.append(Template(filename="mako_files/microplot_parse.cc.mako"))
+        else:
+            templates.append(Template(filename="mako_files/microplot_parse.c.mako"))
+        if generate_actions:
+            if not force_c:
+                templates.append(Template(filename="mako_files/microplot_init.cc.mako"))
+                templates.append(Template(filename="mako_files/microplot_actions.cc.mako"))
+            else:
+                templates.append(Template(filename="mako_files/microplot_init.c.mako"))
+                templates.append(Template(filename="mako_files/microplot_actions.c.mako"))
+        for template in templates:
+            output_file = (template.filename.split('/')[-1]).split(".mako")[0]
+            output_file = "generated_" + output_file
+            output_file = open(output_file, "w+")
+            output_file.write(template.render())
+
+
+
+def main():
+    mp = MicroPlot(ARGS.proto_yaml)
+    if ARGS.generate:
+        mp.generate(ARGS.force_c, ARGS.first_generation)
+
+if __name__ == "__main__":
+    main()
