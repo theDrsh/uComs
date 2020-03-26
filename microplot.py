@@ -83,9 +83,11 @@ class MicroPlot():
             if key is not None and value is not None:
                 for command_key, command_value in self._yaml_data["Protocol"]["Commands"].items():
                     if key == command_value:
+                        self._logger.info("Parsed %s with value %d" % (command_key, value))
                         return {command_key : value}
         return None
     def generate(self, force_c, generate_actions):
+        self._logger.info("Starting Generator")
         templates = [Template(filename="mako_files/microplot.h.mako")]
         if not force_c:
             templates.append(Template(filename="mako_files/microplot_parse.cc.mako"))
@@ -99,10 +101,12 @@ class MicroPlot():
                 templates.append(Template(filename="mako_files/microplot_init.c.mako"))
                 templates.append(Template(filename="mako_files/microplot_actions.c.mako"))
         for template in templates:
-            output_file = (template.filename.split('/')[-1]).split(".mako")[0]
-            output_file = "generated_" + output_file
-            output_file = open(output_file, "w+")
+            output_filename = (template.filename.split('/')[-1]).split(".mako")[0]
+            output_filename = "generated_" + output_filename
+            output_file = open(output_filename, "w+")
             output_file.write(template.render())
+            self._logger.info("Genererated %s as %s" % (template.filename, output_filename))
+            output_file.close()
 
 
 

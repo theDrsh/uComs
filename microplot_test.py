@@ -14,7 +14,6 @@ class TestMicroPlot(unittest.TestCase):
         mp = microplot.MicroPlot("example_protocol.yml")
         with open("test.yml") as file_pointer:
             yaml_data = yaml.full_load(file_pointer)
-        print(yaml_data['test_commands'])
         iteration = 0
         for command in yaml_data['test_commands']:
             response = mp.parse(yaml_data['test_commands'][command])
@@ -24,8 +23,14 @@ class TestMicroPlot(unittest.TestCase):
               self.assertEqual(response[command], 1000 + iteration)
             elif "Digital" in response.keys():
               self.assertEqual(response[command], (-100 - iteration + 9))
-            print("Parsed: %s" % response)
             iteration += 1
+    def test_generate(self):
+        mp = microplot.MicroPlot("example_protocol.yml")
+        mp.generate(False, False)
+        mp.generate(False, True)
+        mp.generate(True, False)
+        mp.generate(True, True)
+
 
 
 

@@ -10,8 +10,9 @@ py_binary(
   ],
 )
 
+
 py_test(
-  name = "mako_files/microplot_test",
+  name = "microplot_test",
   srcs = [
     "microplot.py",
     "example_main.py",
@@ -21,8 +22,9 @@ py_test(
   imports = [
     "PyYaml",
   ],
-  data = [
+  data = glob([
+    "mako_files/*",
     "example_protocol.yml",
-    "test.yml",
-  ],
+    "test.yml"
+  ]),
 )
