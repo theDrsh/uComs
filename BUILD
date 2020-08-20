@@ -15,7 +15,6 @@ py_test(
   name = "microplot_test",
   srcs = [
     "microplot.py",
-    "example_main.py",
     "microplot_test.py",
   ],
   main = "microplot_test.py",
