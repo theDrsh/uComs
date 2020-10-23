@@ -9,15 +9,15 @@ import yaml
 from mako.template import Template
 
 # Logger setup for logging(as executable or as import)
-logging.basicConfig(format='MICROPLOT %(asctime)s %(levelname)s %(message)s',
+logging.basicConfig(format='ucoms %(asctime)s %(levelname)s %(message)s',
                     datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
-logger = logging.Logger("MicroPlot")
-module_logger = logging.getLogger('MicroPlot')
+logger = logging.Logger("ucoms")
+module_logger = logging.getLogger('ucoms')
 
 # Argparse setup for calling this as an executable.
 parser = argparse.ArgumentParser(
-    prog="MicroPlot",
-    description="Microplot is a module as well as an executable, \
+    prog="ucoms",
+    description="ucoms is a module as well as an executable, \
                  running it as an executable allows you to use the \
                  code generation functions"
 )
@@ -35,8 +35,8 @@ parser.add_argument("--first_generation",
                     help="This flag generates the one-time files which will \
                           be maintained by user \
                           after first generation these files are: \
-                          \'microplot_init.h/c/cc\' and \
-                          \'microplot_actions.h/cc/c\'",
+                          \'ucoms_init.h/c/cc\' and \
+                          \'ucoms_actions.h/cc/c\'",
                     default=False,
                     action="store_true")
 parser.add_argument("--proto_yaml",
@@ -45,11 +45,11 @@ parser.add_argument("--proto_yaml",
 ARGS = parser.parse_args()
 
 
-class MicroPlot():
+class uComs():
     def __init__(self, protocol_yaml):
         # Setup module logger.
-        self._logger = logging.getLogger("Microplot")
-        self._logger.info("Starting MicroPlot")
+        self._logger = logging.getLogger("ucoms")
+        self._logger.info("Starting ucoms")
         # Check if file exists, if it does, load the yaml data
         if os.path.isfile(protocol_yaml):
             with open(protocol_yaml) as file_pointer:
@@ -106,24 +106,24 @@ class MicroPlot():
     def generate(self, force_c, generate_actions):
         self._logger.info("Starting Generator")
         templates = [Template(
-            filename="mako_files/microplot.h.mako")]
+            filename="mako_files/ucoms.h.mako")]
         if not force_c:
             templates.append(Template(
-                filename="mako_files/microplot_parse.cc.mako"))
+                filename="mako_files/ucoms_parse.cc.mako"))
         else:
             templates.append(
-                Template(filename="mako_files/microplot_parse.c.mako"))
+                Template(filename="mako_files/ucoms_parse.c.mako"))
         if generate_actions:
             if not force_c:
                 templates.append(
-                    Template(filename="mako_files/microplot_init.cc.mako"))
+                    Template(filename="mako_files/ucoms_init.cc.mako"))
                 templates.append(
-                    Template(filename="mako_files/microplot_actions.cc.mako"))
+                    Template(filename="mako_files/ucoms_actions.cc.mako"))
             else:
                 templates.append(
-                    Template(filename="mako_files/microplot_init.c.mako"))
+                    Template(filename="mako_files/ucoms_init.c.mako"))
                 templates.append(
-                    Template(filename="mako_files/microplot_actions.c.mako"))
+                    Template(filename="mako_files/ucoms_actions.c.mako"))
         for template in templates:
             output_filename = template.filename.split('/')[-1]
             output_filename = output_filename.split(".mako")[0]
@@ -136,9 +136,9 @@ class MicroPlot():
 
 
 def main():
-    mp = MicroPlot(ARGS.proto_yaml)
+    uc = uComs(ARGS.proto_yaml)
     if ARGS.generate:
-        mp.generate(ARGS.force_c, ARGS.first_generation)
+        uc.generate(ARGS.force_c, ARGS.first_generation)
 
 
 if __name__ == "__main__":

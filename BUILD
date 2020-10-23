@@ -1,7 +1,7 @@
 py_binary(
-  name = "microplot",
+  name = "ucoms",
   srcs = [
-    "microplot.py",
+    "ucoms.py",
     "example_main.py",
   ],
   main = "example_main.py",
@@ -12,12 +12,12 @@ py_binary(
 
 
 py_test(
-  name = "microplot_test",
+  name = "ucoms_test",
   srcs = [
-    "microplot.py",
-    "microplot_test.py",
+    "ucoms.py",
+    "ucoms_test.py",
   ],
-  main = "microplot_test.py",
+  main = "ucoms_test.py",
   imports = [
     "PyYaml",
   ],

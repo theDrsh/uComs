@@ -1,8 +1,8 @@
-# MicroPlot
-### ![Python application](https://github.com/theDrsh/MicroPlot/workflows/Python%20application/badge.svg)
+# uComs
+### ![Python application](https://github.com/theDrsh/ucoms/workflows/Python%20application/badge.svg)
 ## Parser Module:
- - The meat of microplot, it parses commands from your embedded project.
- - Supports protocols which are strings when the MicroPlot.parse() method is called
+ - The meat of uComms, it parses commands from your embedded project.
+ - Supports protocols which are strings when the uComs.parse() method is called
 
 ## FUTURE PLANS:
 ### Code Generation tools

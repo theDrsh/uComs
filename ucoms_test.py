@@ -1,21 +1,21 @@
-import microplot
+import ucoms
 import unittest
 import yaml
 
 
-class TestMicroPlot(unittest.TestCase):
+class TestuComs(unittest.TestCase):
 
     def test_instantiation(self):
-        unused_mp = microplot.MicroPlot("example_protocol.yml")
-        print(unused_mp)
+        unused_uc = ucoms.uComs("example_protocol.yml")
+        print(unused_uc)
         try:
-            unused_mp2 = microplot.MicroPlot("")
-            print(unused_mp2)
+            unused_uc2 = ucoms.uComs("")
+            print(unused_uc2)
         except SystemExit as e:
             print("Caught %s as expected" % (e))
 
     def test_commands(self):
-        mp = microplot.MicroPlot("example_protocol.yml")
+        mp = ucoms.uComs("example_protocol.yml")
         with open("test.yml") as file_pointer:
             yaml_data = yaml.full_load(file_pointer)
         iteration = 0
@@ -30,11 +30,11 @@ class TestMicroPlot(unittest.TestCase):
             iteration += 1
 
     def test_generate(self):
-        mp = microplot.MicroPlot("example_protocol.yml")
-        mp.generate(False, False)
-        mp.generate(False, True)
-        mp.generate(True, False)
-        mp.generate(True, True)
+        uc = ucoms.uComs("example_protocol.yml")
+        uc.generate(False, False)
+        uc.generate(False, True)
+        uc.generate(True, False)
+        uc.generate(True, True)
 
 
 if __name__ == "__main__":
