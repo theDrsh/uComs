@@ -65,6 +65,10 @@ class uComs():
         for element_key, element_value in pattern:
             self._pattern_list.insert(int(element_key), element_value)
         self._logger.info("Protocol file parsed successfully")
+        if self.validateData():
+            self._logger.debug("Build and validation successful")
+        else:
+            self._logger.fatal("Failed to validate data")
 
     def parse(self, input_string):
         '''
@@ -109,10 +113,10 @@ class uComs():
             filename="mako_files/ucoms.h.mako")]
         if not force_c:
             templates.append(Template(
-                filename="mako_files/ucoms_parse.cc.mako"))
+                filename="mako_files/ucoms_decode.cc.mako"))
         else:
             templates.append(
-                Template(filename="mako_files/ucoms_parse.c.mako"))
+                Template(filename="mako_files/ucoms_decode.c.mako"))
         if generate_actions:
             if not force_c:
                 templates.append(
@@ -133,6 +137,12 @@ class uComs():
             self._logger.info("Genererated %s as %s" %
                               (template.filename, output_filename))
             output_file.close()
+
+    def validateData(self):
+        if self._yaml_data is not None:
+            return True
+        return False
+
 
 
 def main():
