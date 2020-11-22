@@ -3,7 +3,6 @@
 import argparse
 import logging
 import os
-import re
 import sys
 import yaml
 from mako.template import Template
@@ -64,40 +63,47 @@ class uComs():
         self.compiled_host_dict = dict()
         self.compiled_device_dict = dict()
         self.compile_commands()
-    
+
     def compile_commands(self):
         # Make some short hands
         pattern_list = self._yml_data["Protocol"]["Patterns"].keys()
         protocol = self._yml_data["Protocol"]
         dict_of_commands = protocol["Commands"]
-        # Go through all patterns and compile the host and device commands for it
+        # Go through all patterns and compile the host and device command dicts
         for pattern in pattern_list:
             if "Command" not in protocol["Patterns"][pattern]:
-                logger.fatal("Command key is required but not found in pattern %s"%(pattern))
+                logger.fatal("Command key not found for %s" % (pattern))
                 sys.exit(1)
             command_item = protocol["Patterns"][pattern]["Command"]
             host_pattern = protocol["Patterns"][pattern]["Host"]
             device_pattern = protocol["Patterns"][pattern]["Device"]
             compiled_command = ""
-            # Compile the host commands by taking a pattern, building it then creating a dict with all the keys and values of compiled commands
+
+            # Compile the host commands for given pattern
             for host_item in host_pattern:
                 if host_pattern[host_item] in protocol:
                     compiled_command += protocol[host_pattern[host_item]]
                 elif host_pattern[host_item] == "Command":
                     compiled_command += command_item
                 elif host_pattern[host_item] == "Argument":
+                    # use formatter to be placeholder for the argument
                     compiled_command += "{}"
                 elif host_pattern[host_item] == "Value":
                     continue
                 else:
-                    logger.fatal("Protocol %s specifies key %s in Host pattern of %s interaction which doesn't exist in protocol"%(self.protocol_yaml, host_pattern[host_item], pattern))
+                    logger.fatal("Protocol %s specifies key %s in Host pattern \
+                                 of %s which doesn't exist in protocol" % (
+                                     self.protocol_yaml,
+                                     host_pattern[host_item],
+                                     pattern))
                     sys.exit(1)
-            for (argument_key, argument_value) in dict_of_commands[pattern].items():
-                key = pattern + argument_key + "Host"
-                value = compiled_command.format(argument_value)
+            for (arg_key, arg_val) in dict_of_commands[pattern].items():
+                key = pattern + arg_key + "Host"
+                value = compiled_command.format(arg_val)
                 if key in dict_of_commands:
-                    logger.fatal("Duplicate Key %s in compiled Host commands"%(key))
-                self.compiled_host_dict.update({key : value})
+                    logger.fatal("Duplicate Key %s in compiled Host commands" %
+                                 (key))
+                self.compiled_host_dict.update({key: value})
 
             compiled_command = ""
             for device_item in device_pattern:
@@ -110,14 +116,19 @@ class uComs():
                 elif device_pattern[device_item] == "Value":
                     compiled_command += "{}"
                 else:
-                    logger.fatal("Protocol %s specifies key %s in Device pattern of %s interaction which doesn't exist in protocol"%(self.protocol_yaml, device_pattern[device_item], pattern))
+                    logger.fatal("Protocol %s specifies key %s in Device \
+                    pattern of %s interaction which doesn't exist in \
+                    protocol" % (self.protocol_yaml,
+                                 device_pattern[device_item],
+                                 pattern))
                     sys.exit(1)
-            for (argument_key, argument_value) in dict_of_commands[pattern].items():
-                key = pattern + argument_key + "Device"
-                value = compiled_command.format(argument_value, "{}")
+            for (arg_key, arg_val) in dict_of_commands[pattern].items():
+                key = pattern + arg_key + "Device"
+                value = compiled_command.format(arg_val, "{}")
                 if key in dict_of_commands:
-                    logger.fatal("Duplicate Key %s in compiled Device commands"%(key))
-                self.compiled_device_dict.update({key : value})
+                    logger.fatal("Duplicate Key %s in compiled Device dict" %
+                                 (key))
+                self.compiled_device_dict.update({key: value})
 
     def parse(self, input_string):
         '''
@@ -141,7 +152,7 @@ class uComs():
             elif input_string == device_value:
                 key = device_key
                 value = device_value
-        return {key : value}
+        return {key: value}
 
     def generate(self, force_c, generate_actions):
         self._logger.info("Starting Generator")
@@ -218,13 +229,13 @@ class uComsDecoder():
                 leaf.children.append(self.Leaf(value[0]))
                 if len(value) > 1:
                     self.insert(value[1:], leaf.children[-1], depth + 1)
-                
+
         def print_tree(self):
             if not self.root.children:
                 print(None)
                 return
             for i in range(self.max_depth + 1):
-                self.tree_list.append("%d: "%(i))
+                self.tree_list.append("%d: " % (i))
             self.print_tree_helper(self.root, self.tree_list, 0)
             print(self.tree_list)
 
@@ -241,7 +252,7 @@ class uComsDecoder():
         self._yml_data = yml_data
         self.tree = self.Tree()
         self.compiled_command_list = []
-    
+
     def build_decoder(self):
         pattern = self._yml_data["Protocol"]["Pattern"]
         root_pattern = self._yml_data["Protocol"][pattern[1]]
@@ -249,10 +260,10 @@ class uComsDecoder():
             self.tree.root.value = root_pattern
             del pattern[1]
         for command_value in self._yml_data["Protocol"]["Commands"].values():
-            temp_string = "" 
+            temp_string = ""
             for pattern_value in pattern.values():
                 if pattern_value == "Command":
-                    temp_string += command_value        
+                    temp_string += command_value
                 elif pattern_value == "Value":
                     continue
                 else:
