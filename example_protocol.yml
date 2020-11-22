@@ -2,35 +2,75 @@ Protocol:
   # Headers are a common piece of text that all commands share(at beginning of message)
   Header:
     '$'
-  # Headers are a common piece of text that all commands share(at end of message)
+  # Footers are a common piece of text that all commands share(at end of message)
   Footer:
     '>'
+  # Delimiters can separate command from args/values
   Delimiter:
     ' '
-  Pattern:
-    1: Header
-    2: Command
-    3: Delimiter
-    4: Value
-    5: Footer
+  # Patterns define how an interaction between host and device takes place
+  Patterns:
+    # The name of the interaction type
+    GetOne:
+      # The Command is the signature of what kind of interaction is taking place
+      Command: 'G'
+      # Host portion indicates what the host SENDS to the device
+      Host:
+        1: Header
+        2: Command
+        3: Argument
+        4: Footer
+      # Device portion indicates what the device REPLIES to the Host
+      Device:
+        1: Header
+        2: Command
+        3: Argument
+        4: Delimiter
+        5: Value
+        6: Footer
+    SetOne:
+      Command: 'S'
+      Host:
+        1: Header
+        2: Command 
+        3: Delimiter
+        4: Argument
+        5: Footer
+      Device:
+        1: Header
+        2: Command 
+        5: Footer
   Commands:
-    GetAnalogZero:    "RA0"
-    GetAnalogOne:     "RA1"
-    GetAnalogTwo:     "RA2"
-    GetAnalogThree:   "RA3"
-    GetAnalogFour:    "RA4"
-    GetAnalogFive:    "RA5"
-    GetAnalogSix:     "RA6"
-    GetAnalogSeven:   "RA7"
-    GetAnalogEight:   "RA8"
-    GetAnalogNine:    "RA9"
-    GetDigitalZero:   "RD0"
-    GetDigitalOne:    "RD1"
-    GetDigitalTwo:    "RD2"
-    GetDigitalThree:  "RD3"
-    GetDigitalFour:   "RD4"
-    GetDigitalFive:   "RD5"
-    GetDigitalSix:    "RD6"
-    GetDigitalSeven:  "RD7"
-    GetDigitalEight:  "RD8"
-    GetDigitalNine:   "RD9"
+    # Here we define all of the arguments which will be placed in the above patterns
+    GetOne:
+      AnalogZero:    "A0"
+      AnalogOne:     "A1"
+      AnalogTwo:     "A2"
+      AnalogThree:   "A3"
+      AnalogFour:    "A4"
+      AnalogFive:    "A5"
+      AnalogSix:     "A6"
+      AnalogSeven:   "A7"
+      AnalogEight:   "A8"
+      AnalogNine:    "A9"
+      DigitalZero:   "D0"
+      DigitalOne:    "D1"
+      DigitalTwo:    "D2"
+      DigitalThree:  "D3"
+      DigitalFour:   "D4"
+      DigitalFive:   "D5"
+      DigitalSix:    "D6"
+      DigitalSeven:  "D7"
+      DigitalEight:  "D8"
+      DigitalNine:   "D9"
+    SetOne:
+      DigitalZero:   "D0"
+      DigitalOne:    "D1"
+      DigitalTwo:    "D2"
+      DigitalThree:  "D3"
+      DigitalFour:   "D4"
+      DigitalFive:   "D5"
+      DigitalSix:    "D6"
+      DigitalSeven:  "D7"
+      DigitalEight:  "D8"
+      DigitalNine:   "D9"

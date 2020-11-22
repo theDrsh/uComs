@@ -21,3 +21,8 @@
  - Future:
     - I2C(Raspberry PI could host)
     - SPI(same as I2C)
+
+### Ideas:
+- Async commands(should have a device pattern with no host)
+- Versioning using pickled data with a reserved async
+- C/C++ generated host-side decode
