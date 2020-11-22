@@ -32,14 +32,16 @@ Protocol:
       Command: 'S'
       Host:
         1: Header
-        2: Command 
-        3: Delimiter
-        4: Argument
-        5: Footer
+        2: Command
+        3: Argument
+        4: Delimiter
+        5: Value
+        6: Footer
       Device:
         1: Header
-        2: Command 
-        5: Footer
+        2: Command
+        3: Argument
+        4: Footer
   Commands:
     # Here we define all of the arguments which will be placed in the above patterns
     GetOne:

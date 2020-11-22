@@ -63,18 +63,19 @@ class uComs():
             sys.exit(1)
         self.compiled_host_dict = dict()
         self.compiled_device_dict = dict()
+        self.compile_commands()
     
     def compile_commands(self):
         # Make some short hands
         pattern_list = self._yml_data["Protocol"]["Patterns"].keys()
         protocol = self._yml_data["Protocol"]
         dict_of_commands = protocol["Commands"]
+        # Go through all patterns and compile the host and device commands for it
         for pattern in pattern_list:
             if "Command" not in protocol["Patterns"][pattern]:
                 logger.fatal("Command key is required but not found in pattern %s"%(pattern))
                 sys.exit(1)
             command_item = protocol["Patterns"][pattern]["Command"]
-            print(command_item)
             host_pattern = protocol["Patterns"][pattern]["Host"]
             device_pattern = protocol["Patterns"][pattern]["Device"]
             compiled_command = ""
@@ -86,6 +87,8 @@ class uComs():
                     compiled_command += command_item
                 elif host_pattern[host_item] == "Argument":
                     compiled_command += "{}"
+                elif host_pattern[host_item] == "Value":
+                    continue
                 else:
                     logger.fatal("Protocol %s specifies key %s in Host pattern of %s interaction which doesn't exist in protocol"%(self.protocol_yaml, host_pattern[host_item], pattern))
                     sys.exit(1)
@@ -95,10 +98,26 @@ class uComs():
                 if key in dict_of_commands:
                     logger.fatal("Duplicate Key %s in compiled Host commands"%(key))
                 self.compiled_host_dict.update({key : value})
-                    
-            for device_item in device_pattern:
-                pass
 
+            compiled_command = ""
+            for device_item in device_pattern:
+                if device_pattern[device_item] in protocol:
+                    compiled_command += protocol[device_pattern[device_item]]
+                elif device_pattern[device_item] == "Command":
+                    compiled_command += command_item
+                elif device_pattern[device_item] == "Argument":
+                    compiled_command += "{}"
+                elif device_pattern[device_item] == "Value":
+                    compiled_command += "{}"
+                else:
+                    logger.fatal("Protocol %s specifies key %s in Device pattern of %s interaction which doesn't exist in protocol"%(self.protocol_yaml, device_pattern[device_item], pattern))
+                    sys.exit(1)
+            for (argument_key, argument_value) in dict_of_commands[pattern].items():
+                key = pattern + argument_key + "Device"
+                value = compiled_command.format(argument_value, "{}")
+                if key in dict_of_commands:
+                    logger.fatal("Duplicate Key %s in compiled Device commands"%(key))
+                self.compiled_device_dict.update({key : value})
 
     def parse(self, input_string):
         '''
@@ -110,32 +129,19 @@ class uComs():
         working_string = input_string
         value = None
         key = None
-        for element in self._pattern_list:
-            if element == "Value":
-                # TODO(Daniel): handle values other than ints
-                value = int(re.search(r'[-+]?\d*\.?\d+([eE][-+]?\d+)?',
-                            working_string).group())
-                working_string = working_string.split(str(value))[-1]
-            elif element == "Command":
-                # TODO(Daniel): handle command formats
-                split_string = working_string.split(
-                    self._yml_data["Protocol"]["Delimiter"])
-                key = split_string[0]
-                working_string = split_string[1]
-            else:
-                split_string = working_string.split(
-                    self._yml_data["Protocol"][element])
-                if len(split_string) > 1:
-                    if split_string[0] == '':
-                        working_string = split_string[1]
-            if key is not None and value is not None:
-                commands = self._yml_data["Protocol"]["Commands"].items()
-                for command_key, command_value in commands:
-                    if key == command_value:
-                        self._logger.info("Parsed %s with value %d" %
-                                          (command_key, value))
-                        return {command_key: value}
-        return None
+        # Remove value from string
+        for (device_key, device_value) in self.compiled_device_dict.items():
+            if '{}' in device_value:
+                preamble = device_value.split('{}')[0]
+                post_value = device_value.split('{}')[-1]
+                if (preamble in input_string) and (post_value in input_string):
+                    working_string = input_string[len(preamble):]
+                    value = float(working_string.split(post_value)[0])
+                    key = device_key
+            elif input_string == device_value:
+                key = device_key
+                value = device_value
+        return {key : value}
 
     def generate(self, force_c, generate_actions):
         self._logger.info("Starting Generator")
@@ -255,14 +261,10 @@ class uComsDecoder():
         self.tree.build_tree(self.compiled_command_list)
 
 
-
 def main():
     uc = uComs(ARGS.proto_yaml)
     if ARGS.generate:
         uc.generate(ARGS.force_c, ARGS.first_generation)
-    uc.compile_commands()
-    # decoder = uComsDecoder(uc._yml_data)
-    # decoder.build_decoder()
 
 
 if __name__ == "__main__":
