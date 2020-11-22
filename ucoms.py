@@ -63,6 +63,10 @@ class uComs():
         self.compiled_host_dict = dict()
         self.compiled_device_dict = dict()
         self.compile_commands()
+        self._logger.info("Building Host decoder...")
+        self.host_decoder = uComsDecoder(self.compiled_host_dict)
+        self._logger.info("Building Device decoder...")
+        self.device_decoder = uComsDecoder(self.compiled_device_dict)
 
     def compile_commands(self):
         # Make some short hands
@@ -248,27 +252,15 @@ class uComsDecoder():
             for child in leaf.children:
                 self.print_tree_helper(child, tree_list, index + 1)
 
-    def __init__(self, yml_data):
-        self._yml_data = yml_data
+    def __init__(self, compiled_dict):
+        self.compiled_dict = compiled_dict
         self.tree = self.Tree()
         self.compiled_command_list = []
+        for compiled_value in self.compiled_dict.values():
+            self.compiled_command_list.append(compiled_value)
+        self.build_decoder()
 
     def build_decoder(self):
-        pattern = self._yml_data["Protocol"]["Pattern"]
-        root_pattern = self._yml_data["Protocol"][pattern[1]]
-        if len(root_pattern) <= 1 and len(root_pattern) > 0:
-            self.tree.root.value = root_pattern
-            del pattern[1]
-        for command_value in self._yml_data["Protocol"]["Commands"].values():
-            temp_string = ""
-            for pattern_value in pattern.values():
-                if pattern_value == "Command":
-                    temp_string += command_value
-                elif pattern_value == "Value":
-                    continue
-                else:
-                    temp_string += self._yml_data["Protocol"][pattern_value]
-            self.compiled_command_list.append(temp_string)
         self.tree.build_tree(self.compiled_command_list)
 
 
