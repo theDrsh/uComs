@@ -67,6 +67,9 @@ class uComs():
         self.host_decoder = uComsDecoder(self.compiled_host_dict)
         self._logger.info("Building Device decoder...")
         self.device_decoder = uComsDecoder(self.compiled_device_dict)
+        self.pattern_types = list(self._yml_data["Protocol"]["Patterns"].keys())
+        self.commands = list(self.compiled_device_dict.keys())
+
 
     def compile_commands(self):
         # Make some short hands
@@ -162,6 +165,8 @@ class uComs():
         self._logger.info("Starting Generator")
         templates = [Template(
             filename="mako_files/ucoms.h.mako")]
+        templates.append(Template(
+            filename="mako_files/ucoms_decode.h.mako"))
         if not force_c:
             templates.append(Template(
                 filename="mako_files/ucoms_decode.cc.mako"))
@@ -180,12 +185,13 @@ class uComs():
                 templates.append(
                     Template(filename="mako_files/ucoms_actions.c.mako"))
         for template in templates:
+            self._logger.info("Generating %s" % (template.filename))
             output_filename = template.filename.split('/')[-1]
             output_filename = output_filename.split(".mako")[0]
             output_filename = "generated_files/generated_" + output_filename
             output_file = open(output_filename, "w+")
-            output_file.write(template.render())
-            self._logger.info("Genererated %s as %s" %
+            output_file.write(template.render(force_c=force_c, uc=self))
+            self._logger.info("Generated %s as %s" %
                               (template.filename, output_filename))
             output_file.close()
 
