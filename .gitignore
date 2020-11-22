@@ -1,3 +1,3 @@
 bazel-*
 __pycache__
-generated_*
+generated_files/generated_*
