@@ -167,6 +167,9 @@ class uComs():
             filename="mako_files/ucoms.h.mako")]
         templates.append(Template(
             filename="mako_files/ucoms_decode.h.mako"))
+        # TEST HEADERS
+        templates.append(Template(
+            filename="mako_files/ucoms_decode_test.h.mako"))
         if not force_c:
             templates.append(Template(
                 filename="mako_files/ucoms_decode.cc.mako"))

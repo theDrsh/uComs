@@ -1,4 +1,5 @@
 #include "generated_ucoms_decode.h"
+#include "generated_ucoms_decode_test.h"
 #include <gtest/gtest.h>
 
 class test_uComsDecode : public testing::Test {
