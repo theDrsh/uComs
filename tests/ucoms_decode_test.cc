@@ -14,6 +14,17 @@ void test_uComsDecode::SetUp() {
 TEST_F(test_uComsDecode, fooTest) {
 }
 
+TEST_F(test_uComsDecode, spewTest) {
+  for (int i = 0; i < kLenTestKeys; i++) {
+    // Testing that I can fill in a string like this
+    char test_string[256];
+    sprintf(test_string, TestCommandOutputValues[i].c_str(), i);
+    std::cout << "TEST:" << i
+              << " IN:" << TestCommandInputValues[i] 
+              << " OUT:" << test_string << std::endl;
+  }
+}
+
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

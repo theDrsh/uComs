@@ -197,6 +197,12 @@ class uComs():
             self._logger.info("Generated %s as %s" %
                               (template.filename, output_filename))
             output_file.close()
+    
+    def GetHostKey(self, value):
+        for host_key, host_value in self.compiled_host_dict.items():
+            if value == str(host_value):
+                return host_key
+        return None
 
     def validateData(self):
         if self._yml_data is not None:
@@ -211,55 +217,51 @@ class uComsDecoder():
     class Tree():
 
         class Leaf():
-            def __init__(self, value):
+            def __init__(self, value, depth, path_value):
                 self.children = None
                 self.value = value
+                self.depth = depth
+                self.path_value = path_value
 
         def __init__(self):
-            self.root = self.Leaf("")
+            self.root = self.Leaf("", 0, "")
             self.max_depth = 0
             self.tree_list = []
 
         def build_tree(self, command_list):
             for command in command_list:
-                self.insert(command, self.root, 1)
+                self.insert(command, self.root, 1, command)
 
-        def insert(self, value, leaf, depth):
+        def insert(self, value, leaf, depth, orig_string):
             if not leaf.children:
                 leaf.children = []
-                leaf.children.append(self.Leaf(value[0]))
+                leaf.path_value = ""
+                leaf.children.append(self.Leaf(value[0], depth, orig_string))
                 if depth > self.max_depth:
                     self.max_depth = depth
                 if len(value) > 1:
-                    self.insert(value[1:], leaf.children[-1], depth + 1)
+                    self.insert(value[1:], leaf.children[-1], depth + 1, orig_string)
                 return
             else:
                 for child in leaf.children:
                     if child.value == value[0]:
                         if len(value) > 1:
-                            self.insert(value[1:], child, depth + 1)
+                            self.insert(value[1:], child, depth + 1, orig_string)
                         return
-                leaf.children.append(self.Leaf(value[0]))
+                leaf.children.append(self.Leaf(value[0], depth, None))
                 if len(value) > 1:
-                    self.insert(value[1:], leaf.children[-1], depth + 1)
-
-        def print_tree(self):
-            if not self.root.children:
-                print(None)
-                return
-            for i in range(self.max_depth + 1):
-                self.tree_list.append("%d: " % (i))
-            self.print_tree_helper(self.root, self.tree_list, 0)
-            print(self.tree_list)
-
-        def print_tree_helper(self, leaf, tree_list, index):
-            if index >= len(tree_list):
-                return
-            tree_list[index] += " " + leaf.value
+                    self.insert(value[1:], leaf.children[-1], depth + 1, orig_string)
+        def tree_to_list_of_lists(self):
+            pass
+        def recursive_dfs(self, leaf):
             if not leaf.children:
+                print(leaf.value)
                 return
             for child in leaf.children:
-                self.print_tree_helper(child, tree_list, index + 1)
+                print(leaf.value)
+                self.recursive_dfs(child)
+
+
 
     def __init__(self, compiled_dict):
         self.compiled_dict = compiled_dict
@@ -268,10 +270,41 @@ class uComsDecoder():
         for compiled_value in self.compiled_dict.values():
             self.compiled_command_list.append(compiled_value)
         self.build_decoder()
+        self.decoder_string = ""
+        self.build_decoder_string()
 
     def build_decoder(self):
         self.tree.build_tree(self.compiled_command_list)
+    
+    def build_decoder_string(self):
+        temp_string = ""
+        self.decoder_string = self.build_decoder_string_helper(self.tree.root, temp_string)
 
+    def build_decoder_string_helper(self, leaf, decoder_string):
+        #TODO(Daniel): return string segments final string should be a conglomeration
+        if not leaf.children:
+            # We should be at the end of a command
+            decoder_string += (leaf.depth * "  ") + "case " + leaf.value + ":\n"
+            decoder_string+= (leaf.depth * "    ") + "decoded_command.cmd = " +  self.GetKey(leaf.path_value) + ";\n"
+            decoder_string+= (leaf.depth * "    ") + "break;\n"
+            return decoder_string
+        for child in leaf.children:
+            decoder_string+= (leaf.depth * "  ") + "case " + leaf.value + ":\n"
+            decoder_string+= (leaf.depth * "    ") + "Increment(&index, &working_char, input);\n"
+            decoder_string+= (leaf.depth * "    ") + "switch(working_char) {\n"
+            decoder_string = self.build_decoder_string_helper(child, decoder_string)
+        decoder_string+= (leaf.depth * "  ") + "break;\n" 
+        decoder_string+= (leaf.depth * "  ") + "}\n"        
+        return decoder_string
+
+
+
+
+    def GetKey(self, in_value):
+        for key, value in self.compiled_dict.items():
+            if value == in_value:
+                return key
+        return None
 
 def main():
     uc = uComs(ARGS.proto_yaml)
