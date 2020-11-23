@@ -7,5 +7,5 @@ class uComsDecode {
  public:
   uComsDecodedCommand Decode(char* input);
  private:
-  bool uComsDecode::Increment(int* index, char* working_char, char* input);
+  bool Increment(int* index, char* working_char, char* input);
 };
