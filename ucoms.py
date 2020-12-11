@@ -7,6 +7,8 @@ import sys
 import yaml
 from mako.template import Template
 
+# TODO(Daniel): Make a map between host and device keys, and give it to the decoder object, allow it to look up an input key and output key pair.
+
 # Logger setup for logging(as executable or as import)
 logging.basicConfig(format='ucoms %(asctime)s %(levelname)s %(message)s',
                     datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
