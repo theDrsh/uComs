@@ -11,9 +11,6 @@ void test_uComsDecode::SetUp() {
   return;
 }
 
-TEST_F(test_uComsDecode, fooTest) {
-}
-
 TEST_F(test_uComsDecode, spewTest) {
   for (int i = 0; i < kLenTestKeys; i++) {
     // Testing that I can fill in a string like this
@@ -22,6 +19,13 @@ TEST_F(test_uComsDecode, spewTest) {
     std::cout << "TEST:" << i
               << " IN:" << TestCommandInputValues[i] 
               << " OUT:" << test_string << std::endl;
+  }
+}
+
+TEST_F(test_uComsDecode, decoderTest) {
+  uComsDecode decoder;
+  for (int i = 0; i < kLenTestKeys; i++) {
+    // decoder.Decode(TestCommandInputValues[i].c_str());
   }
 }
 

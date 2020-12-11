@@ -277,28 +277,41 @@ class uComsDecoder():
         self.tree.build_tree(self.compiled_command_list)
     
     def build_decoder_string(self):
-        temp_string = ""
-        self.decoder_string = self.build_decoder_string_helper(self.tree.root, temp_string)
+        self.decoder_string = self.build_decoder_string_helper(self.tree.root, 2)
 
-    def build_decoder_string_helper(self, leaf, decoder_string):
-        #TODO(Daniel): return string segments final string should be a conglomeration
+    def build_decoder_string_helper(self, leaf, spacing):
+        spacing_str = "  " * spacing
+        leaf_with_children_string = ""
+        leaf_with_no_children_string = ""
         if not leaf.children:
-            # We should be at the end of a command
-            decoder_string += (leaf.depth * "  ") + "case " + leaf.value + ":\n"
-            decoder_string+= (leaf.depth * "    ") + "decoded_command.cmd = " +  self.GetKey(leaf.path_value) + ";\n"
-            decoder_string+= (leaf.depth * "    ") + "break;\n"
-            return decoder_string
+            # Leaf with no children
+            child_string = "command_.command = kCommand" + self.GetKey(leaf.path_value) + ";\n"
+            spacing_str += "  "
+            leaf_with_no_children_string += spacing_str + child_string
+            leaf_with_no_children_string += spacing_str + "break;\n"
+            return leaf_with_no_children_string
+        # Skip root case
+        if leaf is not self.tree.root:
+            leaf_with_children_string += spacing_str + "case \'" + leaf.value + "\':\n"
+            spacing_str += "  "
+            leaf_with_children_string += spacing_str + "Increment(&index, &working_char, input);\n"
+            leaf_with_children_string += spacing_str + "switch (working_char) {\n"
+            brace_spacing = len(spacing_str)
+        else:
+            leaf_with_children_string += "switch (working_char) {\n"
+            brace_spacing = 2
+        # Iterate through children to create cases for switch
         for child in leaf.children:
-            decoder_string+= (leaf.depth * "  ") + "case " + leaf.value + ":\n"
-            decoder_string+= (leaf.depth * "    ") + "Increment(&index, &working_char, input);\n"
-            decoder_string+= (leaf.depth * "    ") + "switch(working_char) {\n"
-            decoder_string = self.build_decoder_string_helper(child, decoder_string)
-        decoder_string+= (leaf.depth * "  ") + "break;\n" 
-        decoder_string+= (leaf.depth * "  ") + "}\n"        
-        return decoder_string
-
-
-
+            spacing_str += "  "
+            # Skip root spacing
+            if leaf is not self.tree.root:
+                leaf_with_children_string += self.build_decoder_string_helper(child, spacing + 2)
+            else:
+                leaf_with_children_string += self.build_decoder_string_helper(child, spacing)
+        # Close curly braces
+        leaf_with_children_string += (brace_spacing * " ") + "}\n"
+        # Return string recursively
+        return leaf_with_children_string
 
     def GetKey(self, in_value):
         for key, value in self.compiled_dict.items():
