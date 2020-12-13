@@ -7,7 +7,7 @@ import sys
 import yaml
 from mako.template import Template
 
-# TODO(Daniel): Make a map between host and device keys, and give it to the decoder object, allow it to look up an input key and output key pair.
+# TODO: Make a map between host and device keys, and give it to the decoder object, allow it to look up an input key and output key pair.
 
 # Logger setup for logging(as executable or as import)
 logging.basicConfig(format='ucoms %(asctime)s %(levelname)s %(message)s',
@@ -62,6 +62,7 @@ class uComs():
             logger.fatal("Protocol file %s doesn't exist in the file system" %
                          (protocol_yaml))
             sys.exit(1)
+        self.command_mapping = dict()
         self.compiled_host_dict = dict()
         self.compiled_device_dict = dict()
         self.compile_commands()
@@ -70,8 +71,6 @@ class uComs():
         self._logger.info("Building Device decoder...")
         self.device_decoder = uComsDecoder(self.compiled_device_dict)
         self.pattern_types = list(self._yml_data["Protocol"]["Patterns"].keys())
-        self.commands = list(self.compiled_device_dict.keys())
-
 
     def compile_commands(self):
         # Make some short hands
@@ -138,6 +137,11 @@ class uComs():
                     logger.fatal("Duplicate Key %s in compiled Device dict" %
                                  (key))
                 self.compiled_device_dict.update({key: value})
+            
+            for (arg_key, arg_val) in dict_of_commands[pattern].items():
+                host_key = pattern + arg_key + "Host"
+                device_key = pattern + arg_key + "Device"
+                self.command_mapping.update({host_key : device_key})
 
     def parse(self, input_string):
         '''
@@ -169,6 +173,9 @@ class uComs():
             filename="mako_files/ucoms.h.mako")]
         templates.append(Template(
             filename="mako_files/ucoms_decode.h.mako"))
+        templates.append(Template(
+            filename="mako_files/ucoms.cc.mako"
+        ))
         # TEST HEADERS
         templates.append(Template(
             filename="mako_files/ucoms_decode_test.h.mako"))
@@ -287,16 +294,18 @@ class uComsDecoder():
         leaf_with_no_children_string = ""
         if not leaf.children:
             # Leaf with no children
-            child_string = "command_.command = kCommand" + self.GetKey(leaf.path_value) + ";\n"
-            spacing_str += "  "
+            child_string =   "case \'" + leaf.value + "\':\n"
+            child_string +=  spacing_str + "    command.input = kCommand" + self.GetKey(leaf.path_value) + ";\n"
+            child_string +=  spacing_str + "    command.output = GetDeviceKey(command.input);\n"
+            child_string +=  spacing_str + "    command.command_type = (uComsCommandTypes)42;\n"
             leaf_with_no_children_string += spacing_str + child_string
-            leaf_with_no_children_string += spacing_str + "break;\n"
+            leaf_with_no_children_string += spacing_str + "    return command;\n"
             return leaf_with_no_children_string
         # Skip root case
         if leaf is not self.tree.root:
             leaf_with_children_string += spacing_str + "case \'" + leaf.value + "\':\n"
             spacing_str += "  "
-            leaf_with_children_string += spacing_str + "Increment(&index, &working_char, input);\n"
+            leaf_with_children_string += spacing_str + "working_char = Increment(&index, input);\n"
             leaf_with_children_string += spacing_str + "switch (working_char) {\n"
             brace_spacing = len(spacing_str)
         else:
@@ -311,6 +320,8 @@ class uComsDecoder():
             else:
                 leaf_with_children_string += self.build_decoder_string_helper(child, spacing)
         # Close curly braces
+        leaf_with_children_string += spacing_str + "default:\n" 
+        leaf_with_children_string += spacing_str + "  break;\n"
         leaf_with_children_string += (brace_spacing * " ") + "}\n"
         # Return string recursively
         return leaf_with_children_string

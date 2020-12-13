@@ -7,6 +7,5 @@ class uComsDecode {
  public:
   uComsDecodedCommand Decode(const char* input);
  private:
-  bool Increment(int* index, char* working_char, char* input);
-  uComsDecodedCommand command_;
+  char Increment(int* index, const char* input);
 };

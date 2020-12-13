@@ -6,6 +6,7 @@
 //    parse - tree based parser for parsing commands to an enum, and generates reply
 
 #pragma once
+#include <string>
 
 enum uComsCommandTypes{
   kCommandTypeNone = 0,
@@ -15,15 +16,36 @@ enum uComsCommandTypes{
   kLenCommandTypes = ${len(uc.pattern_types) + 1},
 };
 
-enum uComsCommands {
-  kCommandNone = 0,
-% for command in range(len(uc.commands)):
-  ${'kCommand' + uc.commands[command]} = ${command + 1},
+enum uComsCommandsHost {
+  kCommandNoneHost = 0,
+% for command in uc.compiled_host_dict.keys():
+  ${'kCommand' + command} = ${(list(uc.compiled_host_dict.keys())).index(command) + 1},
 % endfor
-  kLenCommands = ${len(uc.commands) + 1},
+  kLenCommandsHost = ${len(list(uc.compiled_host_dict.keys())) + 1},
 };
 
+enum uComsCommandsDevice {
+  kCommandNoneDevice = 0,
+% for command in uc.compiled_device_dict.keys():
+  ${'kCommand' + command} = ${(list(uc.compiled_device_dict.keys())).index(command) + 1},
+% endfor
+  kLenCommandsDevice = ${len(list(uc.compiled_device_dict.keys())) + 1},
+};
+
+// Prototypes
+uComsCommandsDevice GetDeviceKey(uComsCommandsHost host_key);
+uComsCommandsHost GetHostKey(uComsCommandsDevice device_key);
+std::string GetDeviceKeyString(uComsCommandsDevice host_key);
+std::string GetHostKeyString(uComsCommandsHost device_key);
+
 struct uComsDecodedCommand {
-  uComsCommands command;
+  uComsCommandsHost input;
+  uComsCommandsDevice output;
   uComsCommandTypes command_type;
+};
+
+static const uComsDecodedCommand INIT_DECODE_STRUCT = {
+  .input = (uComsCommandsHost)0,
+  .output = (uComsCommandsDevice)0,
+  .command_type = (uComsCommandTypes)42,
 };

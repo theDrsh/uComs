@@ -17,3 +17,5 @@ MakeFile
 link.txt
 *.marks
 tests/*.test
+lib*.a
+*/lib*.a

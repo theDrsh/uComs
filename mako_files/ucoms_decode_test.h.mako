@@ -25,3 +25,10 @@ const std::string TestCommandOutputValues[kLenTestKeys] {
   [${'kTestKey' + list(uc.compiled_device_dict.keys())[device_key]}] = "${(uc.compiled_device_dict[list(uc.compiled_device_dict.keys())[device_key]]).format("%d")}",
 % endfor
 };
+
+uComsDecodedCommand TestStructs[kLenTestKeys] = {
+% for (host, device) in uc.command_mapping.items():
+  [${'kTestKey' + device}] = {.input = ${"kCommand" + host}, .output = ${"kCommand" + device}, .command_type = (uComsCommandTypes)42},
+% endfor
+};
+  
