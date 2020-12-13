@@ -70,21 +70,21 @@ class uComs():
         self.host_decoder = uComsDecoder(self.compiled_host_dict)
         self._logger.info("Building Device decoder...")
         self.device_decoder = uComsDecoder(self.compiled_device_dict)
-        self.pattern_types = list(self._yml_data["Protocol"]["Patterns"].keys())
+        self.pattern_types = list(self._yml_data["Protocol"]["Interactions"].keys())
 
     def compile_commands(self):
         # Make some short hands
-        pattern_list = self._yml_data["Protocol"]["Patterns"].keys()
+        interaction_list = self._yml_data["Protocol"]["Interactions"].keys()
         protocol = self._yml_data["Protocol"]
         dict_of_commands = protocol["Commands"]
-        # Go through all patterns and compile the host and device command dicts
-        for pattern in pattern_list:
-            if "Command" not in protocol["Patterns"][pattern]:
+        # Go through all Interactions and compile the host and device command dicts
+        for pattern in interaction_list:
+            if "Command" not in protocol["Interactions"][pattern]:
                 logger.fatal("Command key not found for %s" % (pattern))
                 sys.exit(1)
-            command_item = protocol["Patterns"][pattern]["Command"]
-            host_pattern = protocol["Patterns"][pattern]["Host"]
-            device_pattern = protocol["Patterns"][pattern]["Device"]
+            command_item = protocol["Interactions"][pattern]["Command"]
+            host_pattern = protocol["Interactions"][pattern]["Host"]
+            device_pattern = protocol["Interactions"][pattern]["Device"]
             compiled_command = ""
 
             # Compile the host commands for given pattern

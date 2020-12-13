@@ -9,7 +9,7 @@ Protocol:
   Delimiter:
     ' '
   # Patterns define how an interaction between host and device takes place
-  Patterns:
+  Interactions:
     # The name of the interaction type
     GetOne:
       # The Command is the signature of what kind of interaction is taking place
