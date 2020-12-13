@@ -34,5 +34,5 @@ jobs:
     - name: make
       run: cd tests && make
     - name: Run Test
-      run: /home/runner/work/uComs/uComs/tests/decodeTest.test
-      run: /home/runner/work/uComs/uComs/tests/utilsTest.test
+      decode: /home/runner/work/uComs/uComs/tests/decodeTest.test
+      utils: /home/runner/work/uComs/uComs/tests/utilsTest.test
