@@ -35,8 +35,8 @@ enum uComsCommandsDevice {
 // Prototypes
 uComsCommandsDevice GetDeviceKey(uComsCommandsHost host_key);
 uComsCommandsHost GetHostKey(uComsCommandsDevice device_key);
-std::string GetDeviceKeyString(uComsCommandsDevice host_key);
-std::string GetHostKeyString(uComsCommandsHost device_key);
+std::string GetDeviceKeyString(uComsCommandsDevice device_key);
+std::string GetHostKeyString(uComsCommandsHost host_key);
 
 struct uComsDecodedCommand {
   uComsCommandsHost input;
