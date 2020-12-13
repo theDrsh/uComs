@@ -7,6 +7,8 @@ import sys
 import yaml
 from mako.template import Template
 
+# TODO: Make a map between host and device keys, and give it to the decoder object, allow it to look up an input key and output key pair.
+
 # Logger setup for logging(as executable or as import)
 logging.basicConfig(format='ucoms %(asctime)s %(levelname)s %(message)s',
                     datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
@@ -60,6 +62,7 @@ class uComs():
             logger.fatal("Protocol file %s doesn't exist in the file system" %
                          (protocol_yaml))
             sys.exit(1)
+        self.command_mapping = dict()
         self.compiled_host_dict = dict()
         self.compiled_device_dict = dict()
         self.compile_commands()
@@ -67,6 +70,7 @@ class uComs():
         self.host_decoder = uComsDecoder(self.compiled_host_dict)
         self._logger.info("Building Device decoder...")
         self.device_decoder = uComsDecoder(self.compiled_device_dict)
+        self.pattern_types = list(self._yml_data["Protocol"]["Patterns"].keys())
 
     def compile_commands(self):
         # Make some short hands
@@ -133,6 +137,11 @@ class uComs():
                     logger.fatal("Duplicate Key %s in compiled Device dict" %
                                  (key))
                 self.compiled_device_dict.update({key: value})
+            
+            for (arg_key, arg_val) in dict_of_commands[pattern].items():
+                host_key = pattern + arg_key + "Host"
+                device_key = pattern + arg_key + "Device"
+                self.command_mapping.update({host_key : device_key})
 
     def parse(self, input_string):
         '''
@@ -162,6 +171,14 @@ class uComs():
         self._logger.info("Starting Generator")
         templates = [Template(
             filename="mako_files/ucoms.h.mako")]
+        templates.append(Template(
+            filename="mako_files/ucoms_decode.h.mako"))
+        templates.append(Template(
+            filename="mako_files/ucoms.cc.mako"
+        ))
+        # TEST HEADERS
+        templates.append(Template(
+            filename="mako_files/ucoms_decode_test.h.mako"))
         if not force_c:
             templates.append(Template(
                 filename="mako_files/ucoms_decode.cc.mako"))
@@ -180,14 +197,21 @@ class uComs():
                 templates.append(
                     Template(filename="mako_files/ucoms_actions.c.mako"))
         for template in templates:
+            self._logger.info("Generating %s" % (template.filename))
             output_filename = template.filename.split('/')[-1]
             output_filename = output_filename.split(".mako")[0]
             output_filename = "generated_files/generated_" + output_filename
             output_file = open(output_filename, "w+")
-            output_file.write(template.render())
-            self._logger.info("Genererated %s as %s" %
+            output_file.write(template.render(force_c=force_c, uc=self))
+            self._logger.info("Generated %s as %s" %
                               (template.filename, output_filename))
             output_file.close()
+    
+    def GetHostKey(self, value):
+        for host_key, host_value in self.compiled_host_dict.items():
+            if value == str(host_value):
+                return host_key
+        return None
 
     def validateData(self):
         if self._yml_data is not None:
@@ -202,55 +226,51 @@ class uComsDecoder():
     class Tree():
 
         class Leaf():
-            def __init__(self, value):
+            def __init__(self, value, depth, path_value):
                 self.children = None
                 self.value = value
+                self.depth = depth
+                self.path_value = path_value
 
         def __init__(self):
-            self.root = self.Leaf("")
+            self.root = self.Leaf("", 0, "")
             self.max_depth = 0
             self.tree_list = []
 
         def build_tree(self, command_list):
             for command in command_list:
-                self.insert(command, self.root, 1)
+                self.insert(command, self.root, 1, command)
 
-        def insert(self, value, leaf, depth):
+        def insert(self, value, leaf, depth, orig_string):
             if not leaf.children:
                 leaf.children = []
-                leaf.children.append(self.Leaf(value[0]))
+                leaf.path_value = ""
+                leaf.children.append(self.Leaf(value[0], depth, orig_string))
                 if depth > self.max_depth:
                     self.max_depth = depth
                 if len(value) > 1:
-                    self.insert(value[1:], leaf.children[-1], depth + 1)
+                    self.insert(value[1:], leaf.children[-1], depth + 1, orig_string)
                 return
             else:
                 for child in leaf.children:
                     if child.value == value[0]:
                         if len(value) > 1:
-                            self.insert(value[1:], child, depth + 1)
+                            self.insert(value[1:], child, depth + 1, orig_string)
                         return
-                leaf.children.append(self.Leaf(value[0]))
+                leaf.children.append(self.Leaf(value[0], depth, None))
                 if len(value) > 1:
-                    self.insert(value[1:], leaf.children[-1], depth + 1)
-
-        def print_tree(self):
-            if not self.root.children:
-                print(None)
-                return
-            for i in range(self.max_depth + 1):
-                self.tree_list.append("%d: " % (i))
-            self.print_tree_helper(self.root, self.tree_list, 0)
-            print(self.tree_list)
-
-        def print_tree_helper(self, leaf, tree_list, index):
-            if index >= len(tree_list):
-                return
-            tree_list[index] += " " + leaf.value
+                    self.insert(value[1:], leaf.children[-1], depth + 1, orig_string)
+        def tree_to_list_of_lists(self):
+            pass
+        def recursive_dfs(self, leaf):
             if not leaf.children:
+                print(leaf.value)
                 return
             for child in leaf.children:
-                self.print_tree_helper(child, tree_list, index + 1)
+                print(leaf.value)
+                self.recursive_dfs(child)
+
+
 
     def __init__(self, compiled_dict):
         self.compiled_dict = compiled_dict
@@ -259,10 +279,58 @@ class uComsDecoder():
         for compiled_value in self.compiled_dict.values():
             self.compiled_command_list.append(compiled_value)
         self.build_decoder()
+        self.decoder_string = ""
+        self.build_decoder_string()
 
     def build_decoder(self):
         self.tree.build_tree(self.compiled_command_list)
+    
+    def build_decoder_string(self):
+        self.decoder_string = self.build_decoder_string_helper(self.tree.root, 2)
 
+    def build_decoder_string_helper(self, leaf, spacing):
+        spacing_str = "  " * spacing
+        leaf_with_children_string = ""
+        leaf_with_no_children_string = ""
+        if not leaf.children:
+            # Leaf with no children
+            child_string =   "case \'" + leaf.value + "\':\n"
+            child_string +=  spacing_str + "    command.input = kCommand" + self.GetKey(leaf.path_value) + ";\n"
+            child_string +=  spacing_str + "    command.output = GetDeviceKey(command.input);\n"
+            child_string +=  spacing_str + "    command.command_type = (uComsCommandTypes)42;\n"
+            leaf_with_no_children_string += spacing_str + child_string
+            leaf_with_no_children_string += spacing_str + "    return command;\n"
+            return leaf_with_no_children_string
+        # Skip root case
+        if leaf is not self.tree.root:
+            leaf_with_children_string += spacing_str + "case \'" + leaf.value + "\':\n"
+            spacing_str += "  "
+            leaf_with_children_string += spacing_str + "working_char = Increment(&index, input);\n"
+            leaf_with_children_string += spacing_str + "switch (working_char) {\n"
+            brace_spacing = len(spacing_str)
+        else:
+            leaf_with_children_string += "switch (working_char) {\n"
+            brace_spacing = 2
+        # Iterate through children to create cases for switch
+        for child in leaf.children:
+            spacing_str += "  "
+            # Skip root spacing
+            if leaf is not self.tree.root:
+                leaf_with_children_string += self.build_decoder_string_helper(child, spacing + 2)
+            else:
+                leaf_with_children_string += self.build_decoder_string_helper(child, spacing)
+        # Close curly braces
+        leaf_with_children_string += spacing_str + "default:\n" 
+        leaf_with_children_string += spacing_str + "  break;\n"
+        leaf_with_children_string += (brace_spacing * " ") + "}\n"
+        # Return string recursively
+        return leaf_with_children_string
+
+    def GetKey(self, in_value):
+        for key, value in self.compiled_dict.items():
+            if value == in_value:
+                return key
+        return None
 
 def main():
     uc = uComs(ARGS.proto_yaml)
