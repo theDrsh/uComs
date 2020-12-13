@@ -53,3 +53,27 @@ std::string GetDeviceKeyString(uComsCommandsDevice device_key) {
   }
   return "";
 }
+
+uComsCommandTypes GetCommandType(uComsCommandsHost host_key) {
+  switch (host_key) {
+% for host_command in uc.compiled_host_dict.keys():
+    case ${"kCommand" + host_command}:
+      return ${"kCommandType" + uc.type_map[host_command]};
+% endfor
+    default:
+      break;
+  }
+  return kCommandTypeNone;
+}
+
+uComsCommandTypes GetCommandType(uComsCommandsDevice device_key) {
+  switch (device_key) {
+% for device_command in uc.compiled_device_dict.keys():
+    case ${"kCommand" + device_command}:
+      return ${"kCommandType" + uc.type_map[device_command]};
+% endfor
+    default:
+      break;
+  }
+  return kCommandTypeNone;
+}

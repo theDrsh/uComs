@@ -37,6 +37,8 @@ uComsCommandsDevice GetDeviceKey(uComsCommandsHost host_key);
 uComsCommandsHost GetHostKey(uComsCommandsDevice device_key);
 std::string GetDeviceKeyString(uComsCommandsDevice device_key);
 std::string GetHostKeyString(uComsCommandsHost host_key);
+uComsCommandTypes GetCommandType(uComsCommandsHost host_key);
+uComsCommandTypes GetCommandType(uComsCommandsDevice device_key);
 
 struct uComsDecodedCommand {
   uComsCommandsHost input;

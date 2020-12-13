@@ -28,7 +28,7 @@ const std::string TestCommandOutputValues[kLenTestKeys] {
 
 uComsDecodedCommand TestStructs[kLenTestKeys] = {
 % for (host, device) in uc.command_mapping.items():
-  [${'kTestKey' + device}] = {.input = ${"kCommand" + host}, .output = ${"kCommand" + device}, .command_type = (uComsCommandTypes)42},
+  [${'kTestKey' + device}] = {.input = ${"kCommand" + host}, .output = ${"kCommand" + device}, .command_type = ${"kCommandType" + uc.type_map[device]}},
 % endfor
 };
   

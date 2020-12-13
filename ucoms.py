@@ -65,11 +65,12 @@ class uComs():
         self.command_mapping = dict()
         self.compiled_host_dict = dict()
         self.compiled_device_dict = dict()
+        self.type_map = dict()
         self.compile_commands()
         self._logger.info("Building Host decoder...")
-        self.host_decoder = uComsDecoder(self.compiled_host_dict)
+        self.host_decoder = uComsDecoder(self.compiled_host_dict, self.type_map)
         self._logger.info("Building Device decoder...")
-        self.device_decoder = uComsDecoder(self.compiled_device_dict)
+        self.device_decoder = uComsDecoder(self.compiled_device_dict, self.type_map)
         self.pattern_types = list(self._yml_data["Protocol"]["Interactions"].keys())
 
     def compile_commands(self):
@@ -111,6 +112,7 @@ class uComs():
                 if key in dict_of_commands:
                     logger.fatal("Duplicate Key %s in compiled Host commands" %
                                  (key))
+                self.type_map.update({key : pattern})
                 self.compiled_host_dict.update({key: value})
 
             compiled_command = ""
@@ -136,6 +138,7 @@ class uComs():
                 if key in dict_of_commands:
                     logger.fatal("Duplicate Key %s in compiled Device dict" %
                                  (key))
+                self.type_map.update({key : pattern})
                 self.compiled_device_dict.update({key: value})
             
             for (arg_key, arg_val) in dict_of_commands[pattern].items():
@@ -272,8 +275,9 @@ class uComsDecoder():
 
 
 
-    def __init__(self, compiled_dict):
+    def __init__(self, compiled_dict, type_map):
         self.compiled_dict = compiled_dict
+        self.type_map = type_map
         self.tree = self.Tree()
         self.compiled_command_list = []
         for compiled_value in self.compiled_dict.values():
@@ -297,7 +301,7 @@ class uComsDecoder():
             child_string =   "case \'" + leaf.value + "\':\n"
             child_string +=  spacing_str + "    command.input = kCommand" + self.GetKey(leaf.path_value) + ";\n"
             child_string +=  spacing_str + "    command.output = GetDeviceKey(command.input);\n"
-            child_string +=  spacing_str + "    command.command_type = (uComsCommandTypes)42;\n"
+            child_string +=  spacing_str + "    command.command_type = kCommandType" + self.type_map[self.GetKey(leaf.path_value)] +";\n"
             leaf_with_no_children_string += spacing_str + child_string
             leaf_with_no_children_string += spacing_str + "    return command;\n"
             return leaf_with_no_children_string
