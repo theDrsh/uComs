@@ -4,15 +4,12 @@
 
 #include "generated_ucoms_decode.h"
 #include <string.h>
-#include <iostream>
 
 char uComsDecode::Increment(int* index, const char* input) {
     *index += 1;
     if(*index > (strlen(input) - 1)) {
         return '\0';
     }
-    std::cout << "working_char = " << input[*index] << std::endl;
-    std::cout << "index = " << *index << std::endl;
     return input[*index];
 }
 

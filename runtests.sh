@@ -1,5 +1,5 @@
 set -e
-python3 ucoms_test.py
+pytest
 cmake CMakeLists.txt
 make
 ./tests/decodeTest.test
