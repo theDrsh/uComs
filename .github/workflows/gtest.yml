@@ -33,6 +33,7 @@ jobs:
       run: cmake CMakeLists.txt
     - name: make
       run: cd tests && make
-    - name: Run Test
-      decode: /home/runner/work/uComs/uComs/tests/decodeTest.test
-      utils: /home/runner/work/uComs/uComs/tests/utilsTest.test
+    - name: decodeTest
+      run: /home/runner/work/uComs/uComs/tests/decodeTest.test
+    - name: utilsTest
+      run: /home/runner/work/uComs/uComs/tests/utilsTest.test
