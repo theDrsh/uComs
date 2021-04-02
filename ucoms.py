@@ -27,11 +27,6 @@ parser.add_argument("-g",
                     help="Run code generation tools",
                     action="store_true",
                     default=False)
-parser.add_argument("--force_c",
-                    help="If you prefer to use pure C for your embedded code, \
-                          use this option to force generation of C code",
-                    default=False,
-                    action="store_true")
 parser.add_argument("--first_generation",
                     help="This flag generates the one-time files which will \
                           be maintained by user \
@@ -40,7 +35,8 @@ parser.add_argument("--first_generation",
                           \'ucoms_actions.h/cc/c\'",
                     default=False,
                     action="store_true")
-parser.add_argument("--proto_yaml",
+parser.add_argument("-y",
+                    "--proto_yaml",
                     help="Protocol description yaml file.",
                     default="example_protocol.yml")
 ARGS = parser.parse_args()
@@ -65,12 +61,13 @@ class uComs():
         self.command_mapping = dict()
         self.compiled_host_dict = dict()
         self.compiled_device_dict = dict()
+        self.value_type_map = dict()
         self.type_map = dict()
         self.compile_commands()
         self._logger.info("Building Host decoder...")
-        self.host_decoder = uComsDecoder(self.compiled_host_dict, self.type_map)
+        self.host_decoder = uComsDecoder(self.compiled_host_dict, self.type_map, self.value_type_map)
         self._logger.info("Building Device decoder...")
-        self.device_decoder = uComsDecoder(self.compiled_device_dict, self.type_map)
+        self.device_decoder = uComsDecoder(self.compiled_device_dict, self.type_map, self.value_type_map)
         self.pattern_types = list(self._yml_data["Protocol"]["Interactions"].keys())
 
     def compile_commands(self):
@@ -98,6 +95,8 @@ class uComs():
                     # use formatter to be placeholder for the argument
                     compiled_command += "{}"
                 elif host_pattern[host_item] == "Value":
+                    # if the host pattern has a value in it, that means it's an argument
+                    # compiled_command += "{}"
                     continue
                 else:
                     logger.fatal("Protocol %s specifies key %s in Host pattern \
@@ -108,7 +107,10 @@ class uComs():
                     sys.exit(1)
             for (arg_key, arg_val) in dict_of_commands[pattern].items():
                 key = pattern + arg_key + "Host"
-                value = compiled_command.format(arg_val)
+                value = compiled_command.format(arg_val, "{}")
+                # Host patterns with a Value, are passing an arguement down to the device
+                if "{}" in value:
+                    self.value_type_map[pattern] = self._yml_data["Protocol"]["Interactions"][pattern]["ValueType"]
                 if key in dict_of_commands:
                     logger.fatal("Duplicate Key %s in compiled Host commands" %
                                  (key))
@@ -170,7 +172,7 @@ class uComs():
                 value = device_value
         return {key: value}
 
-    def generate(self, force_c, generate_actions):
+    def generate(self, generate_actions):
         self._logger.info("Starting Generator")
         templates = [Template(
             filename="mako_files/ucoms.h.mako")]
@@ -181,31 +183,21 @@ class uComs():
         ))
         # TEST HEADERS
         templates.append(Template(
-            filename="mako_files/ucoms_decode_test.h.mako"))
-        if not force_c:
-            templates.append(Template(
-                filename="mako_files/ucoms_decode.cc.mako"))
-        else:
-            templates.append(
-                Template(filename="mako_files/ucoms_decode.c.mako"))
+        filename="mako_files/ucoms_decode_test.h.mako"))
+        templates.append(Template(
+            filename="mako_files/ucoms_decode.cc.mako"))
         if generate_actions:
-            if not force_c:
-                templates.append(
-                    Template(filename="mako_files/ucoms_init.cc.mako"))
-                templates.append(
-                    Template(filename="mako_files/ucoms_actions.cc.mako"))
-            else:
-                templates.append(
-                    Template(filename="mako_files/ucoms_init.c.mako"))
-                templates.append(
-                    Template(filename="mako_files/ucoms_actions.c.mako"))
+            templates.append(
+                Template(filename="mako_files/ucoms_init.cc.mako"))
+            templates.append(
+                Template(filename="mako_files/ucoms_actions.cc.mako"))
         for template in templates:
             self._logger.info("Generating %s" % (template.filename))
             output_filename = template.filename.split('/')[-1]
             output_filename = output_filename.split(".mako")[0]
             output_filename = "generated_files/generated_" + output_filename
             output_file = open(output_filename, "w+")
-            output_file.write(template.render(force_c=force_c, uc=self))
+            output_file.write(template.render(uc=self))
             self._logger.info("Generated %s as %s" %
                               (template.filename, output_filename))
             output_file.close()
@@ -248,7 +240,11 @@ class uComsDecoder():
             if not leaf.children:
                 leaf.children = []
                 leaf.path_value = ""
-                leaf.children.append(self.Leaf(value[0], depth, orig_string))
+                if value[:2] == '{}':
+                    leaf.children.append(self.Leaf("{}", depth, orig_string))
+                    value = value[1:]
+                else:
+                    leaf.children.append(self.Leaf(value[0], depth, orig_string))
                 if depth > self.max_depth:
                     self.max_depth = depth
                 if len(value) > 1:
@@ -260,24 +256,27 @@ class uComsDecoder():
                         if len(value) > 1:
                             self.insert(value[1:], child, depth + 1, orig_string)
                         return
-                leaf.children.append(self.Leaf(value[0], depth, None))
+                if value[:2] == '{}':
+                    leaf.children.append(self.Leaf("{}", depth, orig_string))
+                    value = value[1:]
+                else:
+                    leaf.children.append(self.Leaf(value[0], depth, None))
                 if len(value) > 1:
                     self.insert(value[1:], leaf.children[-1], depth + 1, orig_string)
         def tree_to_list_of_lists(self):
             pass
         def recursive_dfs(self, leaf):
             if not leaf.children:
-                print(leaf.value)
                 return
             for child in leaf.children:
-                print(leaf.value)
                 self.recursive_dfs(child)
 
 
 
-    def __init__(self, compiled_dict, type_map):
+    def __init__(self, compiled_dict, type_map, value_type_map):
         self.compiled_dict = compiled_dict
         self.type_map = type_map
+        self.value_type_map = value_type_map
         self.tree = self.Tree()
         self.compiled_command_list = []
         for compiled_value in self.compiled_dict.values():
@@ -339,7 +338,7 @@ class uComsDecoder():
 def main():
     uc = uComs(ARGS.proto_yaml)
     if ARGS.generate:
-        uc.generate(ARGS.force_c, ARGS.first_generation)
+        uc.generate(ARGS.first_generation)
 
 
 if __name__ == "__main__":
