@@ -96,7 +96,7 @@ class uComs():
                     compiled_command += "{}"
                 elif host_pattern[host_item] == "Value":
                     # if the host pattern has a value in it, that means it's an argument
-                    # compiled_command += "{}"
+                    compiled_command += "{}"
                     continue
                 else:
                     logger.fatal("Protocol %s specifies key %s in Host pattern \
@@ -111,6 +111,7 @@ class uComs():
                 # Host patterns with a Value, are passing an arguement down to the device
                 if "{}" in value:
                     self.value_type_map[pattern] = self._yml_data["Protocol"]["Interactions"][pattern]["ValueType"]
+                    value = value.format("{%s}"%(self._yml_data["Protocol"]["Interactions"][pattern]["ValueType"]))
                 if key in dict_of_commands:
                     logger.fatal("Duplicate Key %s in compiled Host commands" %
                                  (key))
@@ -240,9 +241,11 @@ class uComsDecoder():
             if not leaf.children:
                 leaf.children = []
                 leaf.path_value = ""
-                if value[:2] == '{}':
-                    leaf.children.append(self.Leaf("{}", depth, orig_string))
-                    value = value[1:]
+                if (value[0] == '{') and ("}" in value):
+                    value_type = value.split("}")[0][1:]
+                    leaf.children.append(self.Leaf("uComsValue%s"%(value_type), depth, orig_string))
+                    value = value.split("}")[-1]
+                    value = " " + value
                 else:
                     leaf.children.append(self.Leaf(value[0], depth, orig_string))
                 if depth > self.max_depth:
@@ -256,9 +259,11 @@ class uComsDecoder():
                         if len(value) > 1:
                             self.insert(value[1:], child, depth + 1, orig_string)
                         return
-                if value[:2] == '{}':
-                    leaf.children.append(self.Leaf("{}", depth, orig_string))
-                    value = value[1:]
+                if (value[0] == '{') and ("}" in value):
+                    value_type = value.split("}")[0][1:]
+                    leaf.children.append(self.Leaf("uComsValue%s"%(value_type), depth, orig_string))
+                    value = value.split("}")[-1]
+                    value = " " + value
                 else:
                     leaf.children.append(self.Leaf(value[0], depth, None))
                 if len(value) > 1:
@@ -306,11 +311,20 @@ class uComsDecoder():
             return leaf_with_no_children_string
         # Skip root case
         if leaf is not self.tree.root:
-            leaf_with_children_string += spacing_str + "case \'" + leaf.value + "\':\n"
-            spacing_str += "  "
-            leaf_with_children_string += spacing_str + "working_char = Increment(&index, input);\n"
-            leaf_with_children_string += spacing_str + "switch (working_char) {\n"
-            brace_spacing = len(spacing_str)
+            if (len(leaf.children) == 1) and ("uComsValue" in leaf.children[0].value):
+                leaf_with_children_string += spacing_str + "case \'" + leaf.value + "\':\n"
+                spacing_str += "  "
+                leaf_with_children_string += spacing_str + "index = ParseValue(index, input, %s);\n"%(leaf.children[0].value)
+                leaf_with_children_string += spacing_str + "if (index < 0) { return INIT_DECODE_STRUCT; }\n"
+                leaf_with_children_string += spacing_str + "switch (working_char) {\n"
+                brace_spacing = len(spacing_str)
+                leaf = leaf.children[0]
+            else:
+                leaf_with_children_string += spacing_str + "case \'" + leaf.value + "\':\n"
+                spacing_str += "  "
+                leaf_with_children_string += spacing_str + "working_char = Increment(&index, input);\n"
+                leaf_with_children_string += spacing_str + "switch (working_char) {\n"
+                brace_spacing = len(spacing_str)
         else:
             leaf_with_children_string += "switch (working_char) {\n"
             brace_spacing = 2
