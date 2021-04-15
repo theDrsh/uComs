@@ -13,12 +13,53 @@ char uComsDecode::Increment(int* index, const char* input) {
     return input[*index];
 }
 
+int uComsDecode::ParseValue(int index, const char* input, const char end_char) {
+  for (int i = index; i < strlen(input); i++) {
+    if(input[i] == end_char) {
+      return i - 1;
+    }
+  }
+  return -1;
+}
+
+uComsValue_t uComsDecode::ValueHandler(int index, int end_index, const char* input, uComsValue_e value_type) {
+  uComsValue_t ret_val = INIT_VALUE_STRUCT;
+  int len = (end_index - index) + 1;
+  char substr[len] = "\0";
+  memcpy(substr, &input[index], len);
+  switch(value_type) {
+    case uComsValueInt:
+      ret_val.value_int = strtol(substr, nullptr, 0);
+      ret_val.stored_type = uComsValueInt;
+      break;
+    case uComsValueBool:
+      ret_val.value_bool = strtol(substr, nullptr, 0);
+      if ((ret_val.value_bool > 1) || (ret_val.value_bool < 0)) {
+        ret_val.value_bool = BOOL_NA;
+        ret_val.stored_type = uComsValueError;
+      } else {
+        ret_val.stored_type = uComsValueBool;
+      }
+      break;
+    case uComsValueFloat:
+      ret_val.value_float = strtod(substr, nullptr);
+      ret_val.stored_type = uComsValueFloat;
+      break;
+    case uComsValueNone:
+    case uComsValueError:
+    default:
+      ret_val.stored_type = uComsValueError;
+  }
+  return ret_val;
+}
+
 ## NOTE: remember we are using the host decoder here, because we are decoding host commands
 uComsDecodedCommand uComsDecode::Decode(const char* input) {
   int index = 0;
   char working_char = input[index];
   int length = strlen(input);
-  uComsDecodedCommand command;
+  int end_index = 0;
+  uComsDecodedCommand command = INIT_DECODE_STRUCT;
   ${uc.host_decoder.decoder_string}
   return INIT_DECODE_STRUCT;
 }

@@ -25,11 +25,22 @@ TEST_F(test_uComsDecode, spewTest) {
 
 TEST_F(test_uComsDecode, decoderTest) {
   uComsDecode decoder;
+  int max_len = 0;
   for (int i = 0; i < kLenTestKeys; i++) {
-    uComsDecodedCommand decode_struct = decoder.Decode(TestCommandInputValues[i].c_str());
+    int cur_length = TestCommandInputValues[i].length();
+    max_len = (cur_length > max_len) ? cur_length : max_len;
+  }
+  char input_string[max_len * 2] = "\0";
+  for (int i = 0; i < kLenTestKeys; i++) {
+    snprintf(input_string, max_len * 2, TestCommandInputValues[i].c_str(), i);
+    uComsDecodedCommand decode_struct = decoder.Decode(input_string);
     EXPECT_EQ(decode_struct.input, TestStructs[i].input);
     EXPECT_EQ(decode_struct.output, TestStructs[i].output);
     EXPECT_EQ(decode_struct.command_type, TestStructs[i].command_type);
+    EXPECT_EQ(decode_struct.value.stored_type, TestStructs[i].value.stored_type);
+    EXPECT_EQ(decode_struct.value.value_int, TestStructs[i].value.value_int);
+    EXPECT_EQ(decode_struct.value.value_float, TestStructs[i].value.value_float);
+    EXPECT_EQ(decode_struct.value.value_bool, TestStructs[i].value.value_bool);
   }
 }
 

@@ -33,10 +33,8 @@ class TestuComs(unittest.TestCase):
 
     def test_generate(self):
         uc = ucoms.uComs("example_protocol.yml")
-        uc.generate(False, False)
-        uc.generate(False, True)
-        uc.generate(True, False)
-        uc.generate(True, True)
+        uc.generate(False)
+        uc.generate(True)
 
 
 if __name__ == "__main__":

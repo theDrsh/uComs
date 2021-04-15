@@ -29,6 +29,7 @@ Protocol:
         5: Value
         6: Footer
     SetOne:
+      ValueType: "Int"
       Command: 'S'
       Host:
         1: Header

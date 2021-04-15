@@ -15,7 +15,15 @@ enum TestCommandKeys {
 // These should be the HOST values(input of decoder)
 const std::string TestCommandInputValues[kLenTestKeys] {
 % for host_key in range(len(list(uc.compiled_host_dict.keys()))):
+  % if "{Int}" in uc.compiled_host_dict[list(uc.compiled_host_dict.keys())[host_key]]:
+  [${'kTestKey' + list(uc.compiled_device_dict.keys())[host_key]}] = "${"%s%s%s"%(uc.compiled_host_dict[list(uc.compiled_host_dict.keys())[host_key]].split("{Int}")[0], "%d", uc.compiled_host_dict[list(uc.compiled_host_dict.keys())[host_key]].split("{Int}")[-1])}",
+  % elif "{float}" in uc.compiled_host_dict[list(uc.compiled_host_dict.keys())[host_key]]:
   [${'kTestKey' + list(uc.compiled_device_dict.keys())[host_key]}] = "${uc.compiled_host_dict[list(uc.compiled_host_dict.keys())[host_key]]}",
+  % elif "{bool}" in uc.compiled_host_dict[list(uc.compiled_host_dict.keys())[host_key]]:
+  [${'kTestKey' + list(uc.compiled_device_dict.keys())[host_key]}] = "${uc.compiled_host_dict[list(uc.compiled_host_dict.keys())[host_key]]}",
+  % else:
+  [${'kTestKey' + list(uc.compiled_device_dict.keys())[host_key]}] = "${uc.compiled_host_dict[list(uc.compiled_host_dict.keys())[host_key]]}",
+  % endif
 % endfor
 };
 
@@ -28,7 +36,11 @@ const std::string TestCommandOutputValues[kLenTestKeys] {
 
 uComsDecodedCommand TestStructs[kLenTestKeys] = {
 % for (host, device) in uc.command_mapping.items():
-  [${'kTestKey' + device}] = {.input = ${"kCommand" + host}, .output = ${"kCommand" + device}, .command_type = ${"kCommandType" + uc.type_map[device]}},
+  % if "GetOne" in host:
+  [${'kTestKey' + device}] = {.input = ${"kCommand" + host}, .output = ${"kCommand" + device}, .command_type = ${"kCommandType" + uc.type_map[device]}, .value = INIT_VALUE_STRUCT},
+  % else:
+  [${'kTestKey' + device}] = {.input = ${"kCommand" + host}, .output = ${"kCommand" + device}, .command_type = ${"kCommandType" + uc.type_map[device]}, .value = {.value_int=${"kTestKey" + device}, .value_bool=BOOL_NA, .value_float=FLOAT_NA, .stored_type=uComsValueInt}},
+  % endif
 % endfor
 };
   
