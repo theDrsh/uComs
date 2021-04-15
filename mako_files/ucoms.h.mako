@@ -72,10 +72,12 @@ static const uComsValue_t INIT_VALUE_STRUCT = {
   .value_int = INT_NA,
   .value_bool = BOOL_NA,
   .value_float = FLOAT_NA,
+  .stored_type = uComsValueError,
 };
 
 static const uComsDecodedCommand INIT_DECODE_STRUCT = {
   .input = (uComsCommandsHost)0,
   .output = (uComsCommandsDevice)0,
   .command_type = (uComsCommandTypes)42,
+  .value = INIT_VALUE_STRUCT,
 };

@@ -16,7 +16,7 @@ char uComsDecode::Increment(int* index, const char* input) {
 int uComsDecode::ParseValue(int index, const char* input, const char end_char) {
   for (int i = index; i < strlen(input); i++) {
     if(input[i] == end_char) {
-      return i;
+      return i - 1;
     }
   }
   return -1;
@@ -24,8 +24,9 @@ int uComsDecode::ParseValue(int index, const char* input, const char end_char) {
 
 uComsValue_t uComsDecode::ValueHandler(int index, int end_index, const char* input, uComsValue_e value_type) {
   uComsValue_t ret_val = INIT_VALUE_STRUCT;
-  char substr[end_index - index] = "\0";
-  memcpy(substr, input, end_index - index);
+  int len = (end_index - index) + 1;
+  char substr[len] = "\0";
+  memcpy(substr, &input[index], len);
   switch(value_type) {
     case uComsValueInt:
       ret_val.value_int = strtol(substr, nullptr, 0);
@@ -58,7 +59,7 @@ uComsDecodedCommand uComsDecode::Decode(const char* input) {
   char working_char = input[index];
   int length = strlen(input);
   int end_index = 0;
-  uComsDecodedCommand command;
+  uComsDecodedCommand command = INIT_DECODE_STRUCT;
   ${uc.host_decoder.decoder_string}
   return INIT_DECODE_STRUCT;
 }
