@@ -28,7 +28,7 @@ jobs:
       run: python3 /home/runner/work/uComs/uComs/ucoms.py -g
     # Run gtest
     - name: Install gtest manually
-      run: sudo apt-get install libgtest-dev && cd /usr/src/gtest && sudo cmake CMakeLists.txt && sudo make && sudo ls -al
+      run: sudo apt-get install libgtest-dev && cd /usr/src/gtest && sudo cmake CMakeLists.txt && sudo make
     - name: configure
       run: cmake CMakeLists.txt
     - name: make
