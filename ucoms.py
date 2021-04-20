@@ -303,6 +303,7 @@ class uComsDecoder():
         if not leaf.children:
             # Leaf with no children
             child_string =   "case \'" + leaf.value + "\':\n"
+            child_string +=  spacing_str + "    if ((strlen(input) - 1) > index) { return INIT_DECODE_STRUCT; }"
             child_string +=  spacing_str + "    command.input = kCommand" + self.GetKey(leaf.path_value) + ";\n"
             child_string +=  spacing_str + "    command.output = GetDeviceKey(command.input);\n"
             child_string +=  spacing_str + "    command.command_type = kCommandType" + self.type_map[self.GetKey(leaf.path_value)] +";\n"
@@ -315,12 +316,12 @@ class uComsDecoder():
                 leaf_with_children_string += spacing_str + "case \'" + leaf.value + "\':\n"
                 spacing_str += "  "
                 leaf_with_children_string += spacing_str + "index++;\n"
-                leaf_with_children_string += spacing_str + "end_index = ParseValue(index, input, '%s');\n"%(leaf.children[0].children[0].value)
+                leaf_with_children_string += spacing_str + "end_index = ParseSubstring(index, input, '%s');\n"%(leaf.children[0].children[0].value)
                 leaf_with_children_string += spacing_str + "if (end_index < 0) { return INIT_DECODE_STRUCT; }\n"
                 leaf_with_children_string += spacing_str + "command.value = ValueHandler(index, end_index, input, %s);\n"%(leaf.children[0].value)
                 leaf_with_children_string += spacing_str + "if (command.value.stored_type == uComsValueError) { return INIT_DECODE_STRUCT; }\n"
                 leaf_with_children_string += spacing_str + "index = end_index;\n"
-                leaf_with_children_string += spacing_str + "working_char = Increment(&index, input);\n"
+                leaf_with_children_string += spacing_str + "working_char = input[index];\n"
                 leaf_with_children_string += spacing_str + "switch (working_char) {\n"
                 brace_spacing = len(spacing_str)
                 leaf = leaf.children[0]
@@ -343,7 +344,7 @@ class uComsDecoder():
                 leaf_with_children_string += self.build_decoder_string_helper(child, spacing)
         # Close curly braces
         leaf_with_children_string += spacing_str + "default:\n" 
-        leaf_with_children_string += spacing_str + "  break;\n"
+        leaf_with_children_string += spacing_str + "  return INIT_DECODE_STRUCT;\n"
         leaf_with_children_string += (brace_spacing * " ") + "}\n"
         # Return string recursively
         return leaf_with_children_string
