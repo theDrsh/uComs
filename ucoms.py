@@ -316,7 +316,7 @@ class uComsDecoder():
                 leaf_with_children_string += spacing_str + "case \'" + leaf.value + "\':\n"
                 spacing_str += "  "
                 leaf_with_children_string += spacing_str + "index++;\n"
-                leaf_with_children_string += spacing_str + "end_index = ParseValue(index, input, '%s');\n"%(leaf.children[0].children[0].value)
+                leaf_with_children_string += spacing_str + "end_index = ParseSubstring(index, input, '%s');\n"%(leaf.children[0].children[0].value)
                 leaf_with_children_string += spacing_str + "if (end_index < 0) { return INIT_DECODE_STRUCT; }\n"
                 leaf_with_children_string += spacing_str + "command.value = ValueHandler(index, end_index, input, %s);\n"%(leaf.children[0].value)
                 leaf_with_children_string += spacing_str + "if (command.value.stored_type == uComsValueError) { return INIT_DECODE_STRUCT; }\n"

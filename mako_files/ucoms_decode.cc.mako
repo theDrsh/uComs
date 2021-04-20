@@ -13,7 +13,7 @@ char uComsDecode::Increment(int* index, const char* input) {
     return input[*index];
 }
 
-int uComsDecode::ParseValue(int index, const char* input, const char end_char) {
+int uComsDecode::ParseSubstring(int index, const char* input, const char end_char) {
   for (int i = index; i < strlen(input); i++) {
     if(input[i] == end_char) {
       return i;
