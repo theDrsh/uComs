@@ -4,6 +4,7 @@
 
 #include "generated_ucoms_decode.h"
 #include <string.h>
+#include <iostream>
 
 char uComsDecode::Increment(int* index, const char* input) {
     *index += 1;
@@ -16,7 +17,7 @@ char uComsDecode::Increment(int* index, const char* input) {
 int uComsDecode::ParseValue(int index, const char* input, const char end_char) {
   for (int i = index; i < strlen(input); i++) {
     if(input[i] == end_char) {
-      return i - 1;
+      return i;
     }
   }
   return -1;
@@ -28,10 +29,18 @@ uComsValue_t uComsDecode::ValueHandler(int index, int end_index, const char* inp
   char substr[len] = "\0";
   memcpy(substr, &input[index], len);
   switch(value_type) {
-    case uComsValueInt:
-      ret_val.value_int = strtol(substr, nullptr, 0);
-      ret_val.stored_type = uComsValueInt;
+    case uComsValueInt: {
+      char* end_ptr = 0;
+      // Be strict about leading chars
+      if (isdigit(input[index]) || (input[index] == '-')) {
+        ret_val.value_int = strtol(substr, &end_ptr, 0);
+        // This validates no trailing chars/wonky input
+        if (*end_ptr == input[end_index]) {
+          ret_val.stored_type = uComsValueInt;
+        }
+      }
       break;
+    }
     case uComsValueBool:
       ret_val.value_bool = strtol(substr, nullptr, 0);
       if ((ret_val.value_bool > 1) || (ret_val.value_bool < 0)) {
