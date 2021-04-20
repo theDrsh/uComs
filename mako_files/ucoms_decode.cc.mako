@@ -4,7 +4,6 @@
 
 #include "generated_ucoms_decode.h"
 #include <string.h>
-#include <iostream>
 
 char uComsDecode::Increment(int* index, const char* input) {
     *index += 1;
