@@ -9,8 +9,15 @@
 uComsCommandsDevice GetDeviceKey(uComsCommandsHost host_key) {
   switch (host_key) {
 % for host,device in uc.command_mapping.items():
+  % if 'None' not in host:
+   % if 'None' not in device:
     case ${"kCommand" + host}:
       return ${"kCommand" + device};
+   % else:
+    case ${"kCommand" + host}:
+      return ${"kCommandNoneDevice"};
+    % endif
+  % endif
 % endfor
     default:
       break;
@@ -21,8 +28,15 @@ uComsCommandsDevice GetDeviceKey(uComsCommandsHost host_key) {
 uComsCommandsHost GetHostKey(uComsCommandsDevice device_key) {
   switch (device_key) {
 % for host,device in uc.command_mapping.items():
+  % if 'None' not in device:
+    % if 'None' not in host:
     case ${"kCommand" + device}:
       return ${"kCommand" + host};
+   % else:
+    case ${"kCommand" + device}:
+      return ${"kCommandNoneHost"};
+    % endif
+  % endif
 % endfor
     default:
       break;
@@ -33,8 +47,10 @@ uComsCommandsHost GetHostKey(uComsCommandsDevice device_key) {
 std::string GetHostKeyString(uComsCommandsHost host_key) {
   switch (host_key) {
 % for host in uc.command_mapping.keys():
-    case ${"kCommand" + host}:
-      return "${"kCommand" + host}";
+  % if 'None' not in host:
+  case ${"kCommand" + host}:
+    return "${"kCommand" + host}";
+  % endif
 % endfor
     default:
       break;
@@ -45,8 +61,10 @@ std::string GetHostKeyString(uComsCommandsHost host_key) {
 std::string GetDeviceKeyString(uComsCommandsDevice device_key) {
   switch (device_key) {
 % for device in uc.command_mapping.values():
+  % if 'None' not in device:
     case ${"kCommand" + device}:
       return "${"kCommand" + device}";
+  % endif
 % endfor
     default:
       break;

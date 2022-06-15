@@ -81,73 +81,116 @@ class uComs():
                 logger.fatal("Command key not found for %s" % (pattern))
                 sys.exit(1)
             command_item = protocol["Interactions"][pattern]["Command"]
-            host_pattern = protocol["Interactions"][pattern]["Host"]
-            device_pattern = protocol["Interactions"][pattern]["Device"]
+            if "Host" in protocol["Interactions"][pattern]:
+                host_pattern = protocol["Interactions"][pattern]["Host"]
+            else:
+                host_pattern = None
+            if "Device" in protocol["Interactions"][pattern]:
+                device_pattern = protocol["Interactions"][pattern]["Device"]
+            else:
+                device_pattern = None
             compiled_command = ""
 
-            # Compile the host commands for given pattern
-            for host_item in host_pattern:
-                if host_pattern[host_item] in protocol:
-                    compiled_command += protocol[host_pattern[host_item]]
-                elif host_pattern[host_item] == "Command":
-                    compiled_command += command_item
-                elif host_pattern[host_item] == "Argument":
-                    # use formatter to be placeholder for the argument
-                    compiled_command += "{}"
-                elif host_pattern[host_item] == "Value":
-                    # if the host pattern has a value in it, that means it's an argument
-                    compiled_command += "{}"
-                    continue
+            # Asynchronous commands can have no host patterns
+            if host_pattern is not None:
+                # Compile the host commands for given pattern
+                for host_item in host_pattern:
+                    if host_pattern[host_item] in protocol:
+                        compiled_command += protocol[host_pattern[host_item]]
+                    elif host_pattern[host_item] == "Command":
+                        compiled_command += command_item
+                    elif host_pattern[host_item] == "Argument":
+                        # use formatter to be placeholder for the argument
+                        compiled_command += "{}"
+                    elif host_pattern[host_item] == "Value":
+                        # if the host pattern has a value in it, that means it's an argument
+                        compiled_command += "{}"
+                        continue
+                    else:
+                        logger.fatal("Protocol %s specifies key %s in Host pattern \
+                                    of %s which doesn't exist in protocol" % (
+                                        self.protocol_yaml,
+                                        host_pattern[host_item],
+                                        pattern))
+                        sys.exit(1)
+                # Commands with expected arguments
+                if pattern in dict_of_commands:
+                    for (arg_key, arg_val) in dict_of_commands[pattern].items():
+                        key = pattern + arg_key + "Host"
+                        value = compiled_command.format(arg_val, "{}")
+                        # Host patterns with a Value, are passing an arguement down to the device
+                        if "{}" in value:
+                            self.value_type_map[pattern] = self._yml_data["Protocol"]["Interactions"][pattern]["ValueType"]
+                            value = value.format("{%s}"%(self._yml_data["Protocol"]["Interactions"][pattern]["ValueType"]))
+                        if key in dict_of_commands:
+                            logger.fatal("Duplicate Key %s in compiled Host commands" %
+                                        (key))
+                        self.type_map.update({key : pattern})
+                        self.compiled_host_dict.update({key: value})
                 else:
-                    logger.fatal("Protocol %s specifies key %s in Host pattern \
-                                 of %s which doesn't exist in protocol" % (
-                                     self.protocol_yaml,
-                                     host_pattern[host_item],
-                                     pattern))
-                    sys.exit(1)
-            for (arg_key, arg_val) in dict_of_commands[pattern].items():
-                key = pattern + arg_key + "Host"
-                value = compiled_command.format(arg_val, "{}")
-                # Host patterns with a Value, are passing an arguement down to the device
-                if "{}" in value:
-                    self.value_type_map[pattern] = self._yml_data["Protocol"]["Interactions"][pattern]["ValueType"]
-                    value = value.format("{%s}"%(self._yml_data["Protocol"]["Interactions"][pattern]["ValueType"]))
-                if key in dict_of_commands:
-                    logger.fatal("Duplicate Key %s in compiled Host commands" %
-                                 (key))
-                self.type_map.update({key : pattern})
-                self.compiled_host_dict.update({key: value})
+                    # Only have to do this once
+                    key = pattern + "Host"
+                    value = compiled_command
+                    # Host patterns with a Value, are passing an arguement down to the device
+                    if "{}" in value:
+                        self.value_type_map[pattern] = self._yml_data["Protocol"]["Interactions"][pattern]["ValueType"]
+                        value = value.format("{%s}"%(self._yml_data["Protocol"]["Interactions"][pattern]["ValueType"]))
+                    if key in dict_of_commands:
+                        logger.fatal("Duplicate Key %s in compiled Host commands" %
+                                    (key))
+                    self.type_map.update({key : pattern})
+                    self.compiled_host_dict.update({key: value})
+
 
             compiled_command = ""
-            for device_item in device_pattern:
-                if device_pattern[device_item] in protocol:
-                    compiled_command += protocol[device_pattern[device_item]]
-                elif device_pattern[device_item] == "Command":
-                    compiled_command += command_item
-                elif device_pattern[device_item] == "Argument":
-                    compiled_command += "{}"
-                elif device_pattern[device_item] == "Value":
-                    compiled_command += "{}"
+            if device_pattern is not None:
+                for device_item in device_pattern:
+                    if device_pattern[device_item] in protocol:
+                        compiled_command += protocol[device_pattern[device_item]]
+                    elif device_pattern[device_item] == "Command":
+                        compiled_command += command_item
+                    elif device_pattern[device_item] == "Argument":
+                        compiled_command += "{}"
+                    elif device_pattern[device_item] == "Value":
+                        compiled_command += "{}"
+                    else:
+                        logger.fatal("Protocol %s specifies key %s in Device \
+                        pattern of %s interaction which doesn't exist in \
+                        protocol" % (self.protocol_yaml,
+                                    device_pattern[device_item],
+                                    pattern))
+                        sys.exit(1)
+                if pattern in dict_of_commands:
+                    for (arg_key, arg_val) in dict_of_commands[pattern].items():
+                        key = pattern + arg_key + "Device"
+                        value = compiled_command.format(arg_val, "{}")
+                        if key in dict_of_commands:
+                            logger.fatal("Duplicate Key %s in compiled Device dict" %
+                                        (key))
+                        self.type_map.update({key : pattern})
+                        self.compiled_device_dict.update({key: value})
                 else:
-                    logger.fatal("Protocol %s specifies key %s in Device \
-                    pattern of %s interaction which doesn't exist in \
-                    protocol" % (self.protocol_yaml,
-                                 device_pattern[device_item],
-                                 pattern))
-                    sys.exit(1)
-            for (arg_key, arg_val) in dict_of_commands[pattern].items():
-                key = pattern + arg_key + "Device"
-                value = compiled_command.format(arg_val, "{}")
-                if key in dict_of_commands:
-                    logger.fatal("Duplicate Key %s in compiled Device dict" %
-                                 (key))
-                self.type_map.update({key : pattern})
-                self.compiled_device_dict.update({key: value})
-            
-            for (arg_key, arg_val) in dict_of_commands[pattern].items():
-                host_key = pattern + arg_key + "Host"
-                device_key = pattern + arg_key + "Device"
+                    key = pattern + "Device"
+                    value = compiled_command
+                    if key in dict_of_commands:
+                        logger.fatal("Duplicate Key %s in compiled Device dict" %
+                                    (key))
+                    self.type_map.update({key : pattern})
+                    self.compiled_device_dict.update({key: value})
+            if pattern in dict_of_commands:
+                for (arg_key, arg_val) in dict_of_commands[pattern].items():
+                    host_key = pattern + arg_key + "Host"
+                    device_key = pattern + arg_key + "Device"
+                    self.command_mapping.update({host_key : device_key})
+            else:
+                host_key = "None"
+                device_key = "None"
+                if host_pattern is not None:
+                    host_key = pattern + "Host"
+                if device_pattern is not None:
+                    device_key = pattern + "Device"
                 self.command_mapping.update({host_key : device_key})
+        print(self.command_mapping)
 
     def parse(self, input_string):
         '''
@@ -180,8 +223,7 @@ class uComs():
         templates.append(Template(
             filename="mako_files/ucoms_decode.h.mako"))
         templates.append(Template(
-            filename="mako_files/ucoms.cc.mako"
-        ))
+            filename="mako_files/ucoms.cc.mako"))
         # TEST HEADERS
         templates.append(Template(
         filename="mako_files/ucoms_decode_test.h.mako"))
@@ -202,7 +244,7 @@ class uComs():
             self._logger.info("Generated %s as %s" %
                               (template.filename, output_filename))
             output_file.close()
-    
+
     def GetHostKey(self, value):
         for host_key, host_value in self.compiled_host_dict.items():
             if value == str(host_value):
@@ -292,7 +334,7 @@ class uComsDecoder():
 
     def build_decoder(self):
         self.tree.build_tree(self.compiled_command_list)
-    
+
     def build_decoder_string(self):
         self.decoder_string = self.build_decoder_string_helper(self.tree.root, 2)
 
@@ -303,7 +345,7 @@ class uComsDecoder():
         if not leaf.children:
             # Leaf with no children
             child_string =   "case \'" + leaf.value + "\':\n"
-            child_string +=  spacing_str + "    if ((strlen(input) - 1) > index) { return INIT_DECODE_STRUCT; }"
+            child_string +=  spacing_str + "    if ((strlen(input) - 1) > index) { return INIT_DECODE_STRUCT; }\n"
             child_string +=  spacing_str + "    command.input = kCommand" + self.GetKey(leaf.path_value) + ";\n"
             child_string +=  spacing_str + "    command.output = GetDeviceKey(command.input);\n"
             child_string +=  spacing_str + "    command.command_type = kCommandType" + self.type_map[self.GetKey(leaf.path_value)] +";\n"
@@ -343,7 +385,7 @@ class uComsDecoder():
             else:
                 leaf_with_children_string += self.build_decoder_string_helper(child, spacing)
         # Close curly braces
-        leaf_with_children_string += spacing_str + "default:\n" 
+        leaf_with_children_string += spacing_str + "default:\n"
         leaf_with_children_string += spacing_str + "  return INIT_DECODE_STRUCT;\n"
         leaf_with_children_string += (brace_spacing * " ") + "}\n"
         # Return string recursively

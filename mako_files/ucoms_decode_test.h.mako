@@ -9,6 +9,11 @@ enum TestCommandKeys {
 % for device_key in range(len(list(uc.compiled_device_dict.keys()))):
   ${'kTestKey' + list(uc.compiled_device_dict.keys())[device_key]} = ${device_key},
 % endfor
+% for host_key in range(len(list(uc.compiled_host_dict.keys()))):
+  % if host_key not in uc.command_mapping:
+  ${'kTestKey' + list(uc.compiled_host_dict.keys())[host_key]} = ${host_key},
+  %endif
+% endfor
   kLenTestKeys = ${len(list(uc.compiled_device_dict.keys()))}
 };
 
@@ -38,9 +43,12 @@ uComsDecodedCommand TestStructs[kLenTestKeys] = {
 % for (host, device) in uc.command_mapping.items():
   % if "GetOne" in host:
   [${'kTestKey' + device}] = {.input = ${"kCommand" + host}, .output = ${"kCommand" + device}, .command_type = ${"kCommandType" + uc.type_map[device]}, .value = INIT_VALUE_STRUCT},
-  % else:
+  % elif "SetOne" in host:
   [${'kTestKey' + device}] = {.input = ${"kCommand" + host}, .output = ${"kCommand" + device}, .command_type = ${"kCommandType" + uc.type_map[device]}, .value = {.value_int=${"kTestKey" + device}, .value_bool=BOOL_NA, .value_float=FLOAT_NA, .stored_type=uComsValueInt}},
+  % elif "StartAsync" in host:
+  [${'kTestKey' + host}] = {.input = ${"kCommand" + host}, .output = ${"kCommandNoneDevice"}, .command_type = ${"kCommandTypeStartAsyncReport"}, .value = {.value_int=INT_NA, .value_bool=BOOL_NA, .value_float=FLOAT_NA, .stored_type=uComsValueError}},
+  % else:
+
   % endif
 % endfor
 };
-  
