@@ -134,7 +134,7 @@ class uComs():
                     # Host patterns with a Value, are passing an arguement down to the device
                     if "{}" in value:
                         self.value_type_map[pattern] = self._yml_data["Protocol"]["Interactions"][pattern]["ValueType"]
-                        value = value.format("{%s}"%(self._yml_data["Protocol"]["Interactions"][pattern]["ValueType"]))
+                        value = value.replace("{}", self._yml_data["Protocol"]["Interactions"][pattern]["ValueType"])
                     if key in dict_of_commands:
                         logger.fatal("Duplicate Key %s in compiled Host commands" %
                                     (key))
@@ -190,7 +190,6 @@ class uComs():
                 if device_pattern is not None:
                     device_key = pattern + "Device"
                 self.command_mapping.update({host_key : device_key})
-        print(self.command_mapping)
 
     def parse(self, input_string):
         '''
