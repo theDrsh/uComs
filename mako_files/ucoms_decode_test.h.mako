@@ -1,6 +1,6 @@
 // GENERATED DO NOT EDIT
 #include "generated_ucoms.h"
-#include <string>
+#include <string.h>
 
 #pragma once
 
@@ -18,7 +18,7 @@ enum TestCommandKeys {
 };
 
 // These should be the HOST values(input of decoder)
-const std::string TestCommandInputValues[kLenTestKeys] {
+const char* TestCommandInputValues[kLenTestKeys] {
 % for host_key in range(len(list(uc.compiled_host_dict.keys()))):
   % if "{Int}" in uc.compiled_host_dict[list(uc.compiled_host_dict.keys())[host_key]]:
   [${'kTestKey' + list(uc.compiled_device_dict.keys())[host_key]}] = "${"%s%s%s"%(uc.compiled_host_dict[list(uc.compiled_host_dict.keys())[host_key]].split("{Int}")[0], "%d", uc.compiled_host_dict[list(uc.compiled_host_dict.keys())[host_key]].split("{Int}")[-1])}",
@@ -33,7 +33,7 @@ const std::string TestCommandInputValues[kLenTestKeys] {
 };
 
 // These should be the DEVICE values(output of decoder)
-const std::string TestCommandOutputValues[kLenTestKeys] {
+const char* TestCommandOutputValues[kLenTestKeys] {
 % for device_key in range(len(list(uc.compiled_device_dict.keys()))):
   [${'kTestKey' + list(uc.compiled_device_dict.keys())[device_key]}] = "${(uc.compiled_device_dict[list(uc.compiled_device_dict.keys())[device_key]]).format("%d")}",
 % endfor

@@ -6,7 +6,8 @@
 //    parse - tree based parser for parsing commands to an enum, and generates reply
 
 #pragma once
-#include <string>
+#include <stdint.h>
+#include <string.h>
 
 enum uComsCommandTypes{
   kCommandTypeNone = 0,
@@ -35,8 +36,8 @@ enum uComsCommandsDevice {
 // Prototypes
 uComsCommandsDevice GetDeviceKey(uComsCommandsHost host_key);
 uComsCommandsHost GetHostKey(uComsCommandsDevice device_key);
-std::string GetDeviceKeyString(uComsCommandsDevice device_key);
-std::string GetHostKeyString(uComsCommandsHost host_key);
+const char* GetDeviceKeyString(uComsCommandsDevice device_key);
+const char* GetHostKeyString(uComsCommandsHost host_key);
 uComsCommandTypes GetCommandType(uComsCommandsHost host_key);
 uComsCommandTypes GetCommandType(uComsCommandsDevice device_key);
 

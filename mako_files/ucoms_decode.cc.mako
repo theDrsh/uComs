@@ -3,6 +3,8 @@
 // This file contains implementations of a decoder in C++
 
 #include "generated_ucoms_decode.h"
+#include <ctype.h>
+#include <stdlib.h>
 #include <string.h>
 
 char uComsDecode::Increment(int* index, const char* input) {

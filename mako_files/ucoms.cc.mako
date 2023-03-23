@@ -44,7 +44,7 @@ uComsCommandsHost GetHostKey(uComsCommandsDevice device_key) {
   return kCommandNoneHost;
 }
 
-std::string GetHostKeyString(uComsCommandsHost host_key) {
+const char* GetHostKeyString(uComsCommandsHost host_key) {
   switch (host_key) {
 % for host in uc.command_mapping.keys():
   % if 'None' not in host:
@@ -58,7 +58,7 @@ std::string GetHostKeyString(uComsCommandsHost host_key) {
   return "";
 }
 
-std::string GetDeviceKeyString(uComsCommandsDevice device_key) {
+const char* GetDeviceKeyString(uComsCommandsDevice device_key) {
   switch (device_key) {
 % for device in uc.command_mapping.values():
   % if 'None' not in device:
